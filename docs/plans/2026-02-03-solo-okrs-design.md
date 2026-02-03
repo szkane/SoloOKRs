@@ -13,16 +13,18 @@ SOLO OKRs is a native macOS 26 app for personal OKR (Objectives and Key Results)
 
 ## Brainstorming Q&A Summary
 
-| #   | Question            | Decision                                                                         |
-| --- | ------------------- | -------------------------------------------------------------------------------- |
-| 1   | Target Platform     | **macOS 26+ only** - Full Liquid Glass, latest SwiftUI APIs                      |
-| 2   | Data Storage        | **SwiftData + CloudKit** - Modern persistence with automatic iCloud sync         |
-| 3   | MCP Architecture    | **Embedded MCP server** - App runs local server on localhost for AI agents       |
-| 4   | AI Features         | **All features** - Quality analysis, smart suggestions, template generation      |
-| 5   | AI Provider         | **User-configurable** - Support OpenAI, Anthropic, Ollama, custom endpoints      |
-| 6   | UI Layout           | **Master-Detail-Detail with NavigationSplitView** - Native 3-column macOS layout |
-| 7   | Key Result Tracking | **Flexible** - User chooses type per KR (percentage, numeric, milestone, binary) |
-| 8   | Task Structure      | **Rich tasks** - Title, Markdown description, due date, priority                 |
+| #   | Question            | Decision                                                                             |
+| --- | ------------------- | ------------------------------------------------------------------------------------ |
+| 1   | Target Platform     | **macOS 26+ only** - Full Liquid Glass, latest SwiftUI APIs                          |
+| 2   | Data Storage        | **SwiftData + CloudKit** - Modern persistence with automatic iCloud sync             |
+| 3   | MCP Architecture    | **Embedded MCP server** - App runs local server on localhost for AI agents           |
+| 4   | AI Features         | **All features** - Quality analysis, smart suggestions, template generation          |
+| 5   | AI Provider         | **User-configurable** - Support Gemini, OpenAI, Anthropic, Ollama, LM Studio, custom |
+| 6   | UI Layout           | **Master-Detail-Detail with NavigationSplitView** - Native 3-column macOS layout     |
+| 7   | Key Result Tracking | **Flexible** - User chooses type per KR (percentage, numeric, milestone, binary)     |
+| 8   | Task Structure      | **Rich tasks** - Title, Markdown description, due date, priority                     |
+| 9   | Objective Status    | **Extended** - Draft, Active, Review, Achieved, Archived                             |
+| 10  | Monetization        | **IAP with Trial** - Free trial (3 objectives or 7-14 days), then purchase required  |
 
 ---
 
@@ -58,7 +60,8 @@ SoloOKRs/
 │   └── Enums/
 │       ├── KeyResultType.swift    # Percentage, Numeric, Milestone, Binary
 │       ├── Priority.swift         # Low, Medium, High, Urgent
-│       └── OKRStatus.swift        # Draft, Active, Completed, Archived
+│       ├── OKRStatus.swift        # Draft, Active, Review, Achieved, Archived
+│       └── SubscriptionStatus.swift # Trial, Subscribed, Expired
 ├── Views/
 │   ├── ContentView.swift          # Main NavigationSplitView
 │   ├── Objectives/
@@ -76,9 +79,13 @@ SoloOKRs/
 │   ├── AI/
 │   │   ├── AIAssistantView.swift
 │   │   └── AISuggestionsView.swift
-│   ├── Settings/
-│   │   ├── SettingsView.swift
-│   │   └── AIProviderSettingsView.swift
+│   ├── Settings/                     # Multi-tab Settings window (like Mail.app)
+│   │   ├── SettingsView.swift         # Main settings container
+│   │   ├── GeneralSettingsView.swift  # General preferences
+│   │   ├── AIProviderSettingsView.swift
+│   │   ├── MCPSettingsView.swift      # MCP server settings
+│   │   ├── SyncSettingsView.swift     # iCloud sync settings
+│   │   └── SubscriptionSettingsView.swift  # IAP & subscription
 │   └── Components/
 │       ├── ProgressIndicator.swift
 │       ├── MarkdownEditor.swift
@@ -88,12 +95,18 @@ SoloOKRs/
 │   │   ├── MCPServer.swift        # HTTP server lifecycle
 │   │   ├── MCPRouter.swift        # Route handlers
 │   │   └── MCPTools.swift         # Tool implementations
-│   └── AIProvider/
-│       ├── AIProvider.swift       # Protocol definition
-│       ├── OpenAIProvider.swift
-│       ├── AnthropicProvider.swift
-│       ├── OllamaProvider.swift
-│       └── AIService.swift        # Provider manager
+│   ├── AIProvider/
+│   │   ├── AIProvider.swift       # Protocol definition
+│   │   ├── GeminiProvider.swift
+│   │   ├── OpenAIProvider.swift
+│   │   ├── AnthropicProvider.swift
+│   │   ├── OllamaProvider.swift
+│   │   ├── LMStudioProvider.swift
+│   │   └── AIService.swift        # Provider manager
+│   └── Subscription/
+│       ├── SubscriptionManager.swift  # StoreKit 2 integration
+│       ├── TrialManager.swift         # Trial period tracking
+│       └── PaywallView.swift          # Purchase UI
 ├── Utilities/
 │   ├── MarkdownParser.swift
 │   └── DateFormatters.swift
@@ -144,13 +157,26 @@ class Objective {
     var objectiveDescription: String
     var startDate: Date
     var endDate: Date
-    var status: OKRStatus
+    var status: OKRStatus  // .draft, .active, .review, .achieved, .archived
+    var lastReviewedAt: Date?  // Track when last reviewed
     var order: Int
     var createdAt: Date
     var updatedAt: Date
 
     @Relationship(deleteRule: .cascade, inverse: \KeyResult.objective)
     var keyResults: [KeyResult]
+}
+```
+
+#### OKRStatus Enum
+
+```swift
+enum OKRStatus: String, Codable {
+    case draft      // Not yet started
+    case active     // Currently being worked on
+    case review     // Pending review (important for regular OKR check-ins)
+    case achieved   // Successfully completed
+    case archived   // No longer relevant, kept for history
 }
 ```
 
@@ -358,12 +384,14 @@ protocol AIProvider {
 
 ### Supported Providers
 
-| Provider      | Models                           | Configuration                           |
-| ------------- | -------------------------------- | --------------------------------------- |
-| **OpenAI**    | GPT-4, GPT-4o, GPT-4o-mini       | API Key                                 |
-| **Anthropic** | Claude 3.5 Sonnet, Claude 3 Opus | API Key                                 |
-| **Ollama**    | Any local model                  | Endpoint URL (default: localhost:11434) |
-| **Custom**    | Any OpenAI-compatible API        | Endpoint URL + API Key                  |
+| Provider      | Models                    | Configuration                           |
+| ------------- | ------------------------- | --------------------------------------- |
+| **Gemini**    | Any Gemini model          | API Key                                 |
+| **OpenAI**    | Any OpenAI model          | API Key                                 |
+| **Anthropic** | Any Anthropic model       | API Key                                 |
+| **Ollama**    | Any local model           | Endpoint URL (default: localhost:11434) |
+| **LM Studio** | Any local model           | Endpoint URL (default: localhost:1234)  |
+| **Custom**    | Any OpenAI-compatible API | Endpoint URL + API Key                  |
 
 ### AI Features
 
@@ -427,7 +455,192 @@ struct SoloOKRsApp: App {
 
 ---
 
-## 7. Future Considerations
+## 7. In-App Purchases & Trial
+
+### Monetization Strategy
+
+The app uses a **freemium model** with a generous trial to let users experience the full product before purchasing.
+
+### Trial Limitations
+
+| Trial Type          | Limitation               | Rationale                         |
+| ------------------- | ------------------------ | --------------------------------- |
+| **Objective Limit** | Max 3 objectives         | Enough to understand OKR workflow |
+| **Time-based**      | 7-14 days (configurable) | Full feature access during trial  |
+
+> **Note:** Choose ONE trial type. Recommend **objective limit** as it's value-based rather than time-pressure.
+
+### Subscription Tiers
+
+| Tier                   | Price      | Features                               |
+| ---------------------- | ---------- | -------------------------------------- |
+| **Free (Trial)**       | $0         | 3 objectives, all features             |
+| **Pro (One-time)**     | $X.XX      | Unlimited objectives, lifetime access  |
+| **Pro (Subscription)** | $X.XX/year | Unlimited objectives, priority support |
+
+> **Decision needed:** One-time purchase vs. subscription model
+
+### StoreKit 2 Implementation
+
+```swift
+// SubscriptionManager.swift
+@Observable
+class SubscriptionManager {
+    var subscriptionStatus: SubscriptionStatus = .trial
+    var objectivesCreated: Int = 0
+
+    var canCreateObjective: Bool {
+        subscriptionStatus == .subscribed || objectivesCreated < 3
+    }
+
+    func purchase(_ product: Product) async throws {
+        // StoreKit 2 purchase flow
+    }
+
+    func restorePurchases() async throws {
+        // Restore previous purchases
+    }
+}
+
+enum SubscriptionStatus: String, Codable {
+    case trial       // Within trial limits
+    case subscribed  // Purchased/subscribed
+    case expired     // Subscription lapsed (if using subscription model)
+}
+```
+
+### Paywall Triggers
+
+- When user tries to create 4th objective (if using objective limit)
+- After trial period expires (if using time-based)
+- From Settings → Subscription tab (anytime)
+
+### Paywall UI
+
+- Clear value proposition
+- Show what's included
+- Restore purchases button
+- Privacy policy and terms links
+
+---
+
+## 8. Settings (Preferences Window)
+
+### Architecture
+
+Multi-tab Settings window following macOS conventions (similar to Mail.app, Xcode, etc.)
+
+```swift
+@main
+struct SoloOKRsApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+
+        Settings {
+            SettingsView()
+        }
+    }
+}
+```
+
+### Settings Tabs
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ⚙️ Settings                                              ─  □  ✕      │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌──────────────┐      │
+│  │ General │ │   AI    │ │   MCP   │ │  Sync   │ │ Subscription │      │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └──────────────┘      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  [Content changes based on selected tab]                               │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Tab Details
+
+#### General Settings
+
+| Setting          | Description                     |
+| ---------------- | ------------------------------- |
+| Default view     | Which column to focus on launch |
+| Date format      | Date display preferences        |
+| Theme            | Follow system / Light / Dark    |
+| Launch at login  | Start app on macOS boot         |
+| Show in menu bar | Optional menu bar icon          |
+
+#### AI Provider Settings
+
+| Setting            | Description                                                    |
+| ------------------ | -------------------------------------------------------------- |
+| Default provider   | Dropdown: Gemini, OpenAI, Anthropic, Ollama, LM Studio, Custom |
+| API Keys           | Secure input fields (stored in Keychain)                       |
+| Model selection    | Per-provider model choice                                      |
+| Endpoint URLs      | For Ollama, LM Studio, Custom                                  |
+| Test connection    | Verify provider is working                                     |
+| Enable AI features | Master toggle                                                  |
+
+#### MCP Server Settings
+
+| Setting            | Description                 |
+| ------------------ | --------------------------- |
+| Enable MCP server  | Toggle server on/off        |
+| Port               | Default: 5100, customizable |
+| Auto-start         | Start server with app       |
+| Show in status bar | Display server status       |
+
+#### Sync Settings
+
+| Setting             | Description                  |
+| ------------------- | ---------------------------- |
+| iCloud sync         | Enable/disable CloudKit sync |
+| Sync status         | Current sync state display   |
+| Sync now            | Manual sync trigger          |
+| Conflict resolution | Last-write-wins or manual    |
+
+#### Subscription Settings
+
+| Setting             | Description                      |
+| ------------------- | -------------------------------- |
+| Current plan        | Show current subscription status |
+| Objectives used     | X of 3 (if on trial)             |
+| Upgrade             | Open paywall                     |
+| Restore purchases   | StoreKit restore                 |
+| Manage subscription | Link to App Store subscriptions  |
+
+### Implementation
+
+```swift
+struct SettingsView: View {
+    var body: some View {
+        TabView {
+            GeneralSettingsView()
+                .tabItem { Label("General", systemImage: "gear") }
+
+            AIProviderSettingsView()
+                .tabItem { Label("AI", systemImage: "brain") }
+
+            MCPSettingsView()
+                .tabItem { Label("MCP", systemImage: "network") }
+
+            SyncSettingsView()
+                .tabItem { Label("Sync", systemImage: "icloud") }
+
+            SubscriptionSettingsView()
+                .tabItem { Label("Subscription", systemImage: "creditcard") }
+        }
+        .frame(width: 500, height: 400)
+    }
+}
+```
+
+---
+
+## 9. Future Considerations
 
 > **Note:** These are documented for future iterations, not part of initial implementation.
 
@@ -435,7 +648,6 @@ struct SoloOKRsApp: App {
 - **Widgets** - Show OKR progress on Desktop/Lock Screen
 - **Shortcuts integration** - Siri and Shortcuts app support
 - **Export/Import** - JSON, CSV, PDF export of OKRs
-- **Team sharing** - Share specific objectives with collaborators
 - **Notifications** - Due date reminders for tasks
 
 ---
@@ -445,5 +657,6 @@ struct SoloOKRsApp: App {
 1. **UI Polish:** Specific Liquid Glass effects and animations
 2. **Onboarding:** First-run experience and tutorial
 3. **Keyboard shortcuts:** Power user navigation
-4. **Menu bar helper:** Optional menu bar icon for quick access
-5. **Dark/Light mode:** Follow system vs. app-specific toggle
+4. **Pricing:** Final pricing decision (one-time vs. subscription, price points)
+5. **Trial type:** Objective limit (3) vs. time-based (7-14 days)
+6. **Dark/Light mode:** Follow system vs. app-specific toggle
