@@ -13,18 +13,22 @@ SOLO OKRs is a native macOS 26 app for personal OKR (Objectives and Key Results)
 
 ## Brainstorming Q&A Summary
 
-| #   | Question            | Decision                                                                             |
-| --- | ------------------- | ------------------------------------------------------------------------------------ |
-| 1   | Target Platform     | **macOS 26+ only** - Full Liquid Glass, latest SwiftUI APIs                          |
-| 2   | Data Storage        | **SwiftData + CloudKit** - Modern persistence with automatic iCloud sync             |
-| 3   | MCP Architecture    | **Embedded MCP server** - App runs local server on localhost for AI agents           |
-| 4   | AI Features         | **All features** - Quality analysis, smart suggestions, template generation          |
-| 5   | AI Provider         | **User-configurable** - Support Gemini, OpenAI, Anthropic, Ollama, LM Studio, custom |
-| 6   | UI Layout           | **Master-Detail-Detail with NavigationSplitView** - Native 3-column macOS layout     |
-| 7   | Key Result Tracking | **Flexible** - User chooses type per KR (percentage, numeric, milestone, binary)     |
-| 8   | Task Structure      | **Rich tasks** - Title, Markdown description, due date, priority                     |
-| 9   | Objective Status    | **Extended** - Draft, Active, Review, Achieved, Archived                             |
-| 10  | Monetization        | **IAP with Trial** - Free trial (3 objectives or 7-14 days), then purchase required  |
+| #   | Question            | Decision                                                                              |
+| --- | ------------------- | ------------------------------------------------------------------------------------- |
+| 1   | Target Platform     | **macOS 26+ only** - Full Liquid Glass, latest SwiftUI APIs                           |
+| 2   | Data Storage        | **SwiftData + CloudKit** - Modern persistence with automatic iCloud sync              |
+| 3   | MCP Architecture    | **Embedded MCP server** - App runs local server on localhost for AI agents            |
+| 4   | AI Features         | **All features** - Quality analysis, smart suggestions, template generation           |
+| 5   | AI Provider         | **User-configurable** - Support Gemini, OpenAI, Anthropic, Ollama, LM Studio, custom  |
+| 6   | UI Layout           | **Master-Detail-Detail with NavigationSplitView** - Native 3-column macOS layout      |
+| 7   | Key Result Tracking | **Flexible** - User chooses type per KR (percentage, numeric, milestone, binary)      |
+| 8   | Task Structure      | **Rich tasks** - Title, Markdown description, due date, priority                      |
+| 9   | Objective Status    | **Extended** - Draft, Active, Review, Achieved, Archived                              |
+| 10  | Monetization        | **IAP with Trial** - Free trial (3 objectives or 7-14 days), then purchase required   |
+| 11  | Multilingual        | **Auto-detect + Custom** - Follow system language, allow user override in Settings    |
+| 12  | Edit Permissions    | **State-based** - OKRs editable only in Draft/Review; read-only when Active           |
+| 13  | Review Mode         | **Configurable** - Weekly/bi-weekly reminders, manual entry; OKR edits only in Review |
+| 14  | Deletion Policy     | **Archive-only** - OKRs cannot be deleted, only archived; Tasks can be deleted        |
 
 ---
 
@@ -159,12 +163,18 @@ class Objective {
     var endDate: Date
     var status: OKRStatus  // .draft, .active, .review, .achieved, .archived
     var lastReviewedAt: Date?  // Track when last reviewed
+    var archivedAt: Date?      // Track when archived
     var order: Int
     var createdAt: Date
     var updatedAt: Date
 
     @Relationship(deleteRule: .cascade, inverse: \KeyResult.objective)
     var keyResults: [KeyResult]
+
+    /// OKRs are only editable in Draft or Review states
+    var isEditable: Bool {
+        status == .draft || status == .review
+    }
 }
 ```
 
@@ -640,7 +650,318 @@ struct SettingsView: View {
 
 ---
 
-## 9. Future Considerations
+## 9. Multilingual Support (Localization)
+
+### Strategy
+
+The app automatically adapts to the system language while allowing users to set a custom language preference.
+
+### Supported Languages (Initial)
+
+| Language            | Code    | Priority |
+| ------------------- | ------- | -------- |
+| English             | en      | Primary  |
+| Simplified Chinese  | zh-Hans | High     |
+| Traditional Chinese | zh-Hant | High     |
+| Japanese            | ja      | Medium   |
+| Korean              | ko      | Medium   |
+| German              | de      | Medium   |
+| French              | fr      | Medium   |
+| Spanish             | es      | Medium   |
+
+> **Note:** Start with English + Chinese, add others based on user demand.
+
+### Implementation
+
+```swift
+// Language preference stored in UserDefaults
+@AppStorage("preferredLanguage") var preferredLanguage: String = ""  // Empty = system default
+
+// Get current language
+var currentLanguage: String {
+    preferredLanguage.isEmpty ? Locale.current.language.languageCode?.identifier ?? "en" : preferredLanguage
+}
+```
+
+### Localization Files
+
+```
+SoloOKRs/Resources/
+├── Localizable.xcstrings          # Main strings catalog (Xcode 15+ format)
+├── en.lproj/
+│   └── InfoPlist.strings
+├── zh-Hans.lproj/
+│   └── InfoPlist.strings
+└── zh-Hant.lproj/
+    └── InfoPlist.strings
+```
+
+### String Catalogs
+
+Using modern `.xcstrings` format for:
+
+- UI labels and buttons
+- Error messages
+- Status descriptions
+- OKR status names
+- Priority names
+
+### Settings UI
+
+```swift
+// In GeneralSettingsView
+Section("Language") {
+    Picker("App Language", selection: $preferredLanguage) {
+        Text("System Default").tag("")
+        Divider()
+        Text("English").tag("en")
+        Text("简体中文").tag("zh-Hans")
+        Text("繁體中文").tag("zh-Hant")
+        // ... other languages
+    }
+}
+```
+
+---
+
+## 10. Edit Permissions & Review Mode
+
+### Core Principle
+
+> **OKRs should be stable once committed.** Edits are only allowed in specific states to maintain integrity and encourage thoughtful goal-setting.
+
+### Edit Permission Matrix
+
+| Item            | Draft     | Active       | Review    | Achieved     | Archived     |
+| --------------- | --------- | ------------ | --------- | ------------ | ------------ |
+| **Objective**   | ✅ Edit   | ❌ Read-only | ✅ Edit   | ❌ Read-only | ❌ Read-only |
+| **Key Result**  | ✅ Edit   | ❌ Read-only | ✅ Edit   | ❌ Read-only | ❌ Read-only |
+| **KR Progress** | ✅ Update | ✅ Update    | ✅ Update | ❌ Read-only | ❌ Read-only |
+| **Task**        | ✅ Full   | ✅ Full      | ✅ Full   | ✅ Full      | ❌ Read-only |
+
+### State Transitions
+
+```
+┌─────────┐    Publish    ┌─────────┐
+│  Draft  │──────────────▶│ Active  │
+└─────────┘               └────┬────┘
+                               │
+                    ┌──────────┼──────────┐
+                    │ Enter    │          │ Complete
+                    │ Review   ▼          ▼
+               ┌────┴────┐         ┌──────────┐
+               │ Review  │         │ Achieved │
+               └────┬────┘         └────┬─────┘
+                    │                   │
+                    │ Exit Review       │ Archive
+                    ▼                   ▼
+               ┌─────────┐        ┌──────────┐
+               │ Active  │        │ Archived │
+               └─────────┘        └──────────┘
+                    │
+                    │ Archive (give up)
+                    ▼
+               ┌──────────┐
+               │ Archived │
+               └──────────┘
+```
+
+### Review Mode
+
+#### Purpose
+
+- Allows periodic review and adjustment of OKRs
+- Encourages regular reflection on goals
+- Only state where Active OKRs can be modified
+
+#### Entering Review Mode
+
+1. **Manual Entry** - User clicks "Enter Review Mode" button
+2. **Scheduled Reminder** - App notifies user when review is due
+
+#### Review Mode Behavior
+
+- All Active and Review status OKRs become editable
+- Visual indicator shows "Review Mode Active"
+- User must explicitly "Exit Review" to return to normal state
+- Unsaved changes prompt confirmation
+
+### Review Schedule Settings
+
+```swift
+struct ReviewSettings {
+    var isEnabled: Bool = true
+    var frequency: ReviewFrequency = .weekly
+    var dayOfWeek: Int = 1  // 1 = Monday, 7 = Sunday
+    var reminderTime: Date = Calendar.current.date(from: DateComponents(hour: 9, minute: 0))!
+}
+
+enum ReviewFrequency: String, Codable, CaseIterable {
+    case weekly = "Weekly"
+    case biweekly = "Every 2 Weeks"
+    case monthly = "Monthly"
+}
+```
+
+### Settings UI for Review
+
+```swift
+// In GeneralSettingsView or new ReviewSettingsView
+Section("Review Schedule") {
+    Toggle("Enable Review Reminders", isOn: $reviewSettings.isEnabled)
+
+    if reviewSettings.isEnabled {
+        Picker("Frequency", selection: $reviewSettings.frequency) {
+            ForEach(ReviewFrequency.allCases, id: \.self) { freq in
+                Text(freq.rawValue).tag(freq)
+            }
+        }
+
+        Picker("Day", selection: $reviewSettings.dayOfWeek) {
+            Text("Monday").tag(1)
+            Text("Tuesday").tag(2)
+            // ... etc
+            Text("Sunday").tag(7)
+        }
+
+        DatePicker("Time", selection: $reviewSettings.reminderTime, displayedComponents: .hourAndMinute)
+    }
+}
+
+Section("Review Mode") {
+    if isInReviewMode {
+        Button("Exit Review Mode") {
+            exitReviewMode()
+        }
+        .foregroundStyle(.orange)
+    } else {
+        Button("Enter Review Mode") {
+            enterReviewMode()
+        }
+    }
+}
+```
+
+### UI Indicators
+
+```swift
+// In ContentView toolbar
+if isInReviewMode {
+    Label("Review Mode", systemImage: "pencil.circle.fill")
+        .foregroundStyle(.orange)
+        .help("OKRs are editable. Click to exit Review Mode.")
+}
+```
+
+---
+
+## 11. Archiving Policy (No Deletion for OKRs)
+
+### Core Principle
+
+> **OKRs are never deleted, only archived.** This preserves history for reflection and learning from past goals.
+
+### Rules
+
+| Item           | Can Delete? | Archive Instead?                 |
+| -------------- | ----------- | -------------------------------- |
+| **Objective**  | ❌ No       | ✅ Yes                           |
+| **Key Result** | ❌ No       | ✅ Yes (archives with Objective) |
+| **Task**       | ✅ Yes      | N/A                              |
+
+### Archive Behavior
+
+1. **Archiving an Objective**
+   - Sets status to `.archived`
+   - All child Key Results also become read-only
+   - All child Tasks become read-only
+   - Removed from main view, appears in "Archived" tab
+
+2. **Unarchiving**
+   - Returns Objective to `.draft` status (not `.active`)
+   - User must re-publish to make it Active again
+
+### UI Changes
+
+#### Main Window with Archive Tab
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  🎯 SOLO OKRs                                              ─  □  ✕      │
+├────────────────┬─────────────────────┬───────────────────────────────────┤
+│  ┌───────────┐ │                     │                                   │
+│  │  Active   │ │  KEY RESULTS        │  TASKS                           │
+│  └───────────┘ │                     │                                   │
+│  ┌───────────┐ │                     │                                   │
+│  │ Archived  │ │                     │                                   │
+│  └───────────┘ │                     │                                   │
+│                │                     │                                   │
+│  OBJECTIVES    │                     │                                   │
+│  ─────────────│                     │                                   │
+│  ▶ Q1 2026     │                     │                                   │
+│    ├─ Growth   │                     │                                   │
+│    └─ Quality  │                     │                                   │
+│                │                     │                                   │
+└────────────────┴─────────────────────┴───────────────────────────────────┘
+```
+
+#### Context Menu
+
+```swift
+// ObjectiveRowView context menu
+.contextMenu {
+    if objective.status == .archived {
+        Button("Unarchive") {
+            unarchiveObjective(objective)
+        }
+    } else {
+        // No delete option - only Archive
+        Button("Archive", role: .destructive) {
+            archiveObjective(objective)
+        }
+    }
+}
+```
+
+#### Archive Confirmation
+
+```swift
+.confirmationDialog(
+    "Archive Objective?",
+    isPresented: $showArchiveConfirmation
+) {
+    Button("Archive", role: .destructive) {
+        archiveObjective(selectedObjective)
+    }
+    Button("Cancel", role: .cancel) {}
+} message: {
+    Text("This objective and its key results will be moved to the archive. You can view them in the Archived tab.")
+}
+```
+
+### Data Model Update
+
+Add to `Objective` model:
+
+```swift
+var archivedAt: Date?  // Track when archived
+```
+
+### Filtering
+
+```swift
+// Active objectives (main view)
+@Query(filter: #Predicate<Objective> { $0.status != .archived })
+private var activeObjectives: [Objective]
+
+// Archived objectives (archive tab)
+@Query(filter: #Predicate<Objective> { $0.status == .archived })
+private var archivedObjectives: [Objective]
+```
+
+---
+
+## 12. Future Considerations
 
 > **Note:** These are documented for future iterations, not part of initial implementation.
 

@@ -2038,6 +2038,369 @@ After implementation, deploy TestFlight build and have user verify:
 1. Basic OKR workflow (create objective → KR → task)
 2. Settings access via Cmd+,
 3. iCloud sync between devices (if multiple devices available)
+4. Review mode functionality
+5. Archive functionality
+6. Language switching
+
+---
+
+## Phase 8: Multilingual Support
+
+### Task 8.1: Set Up Localization
+
+**Files:**
+
+- Create: `SoloOKRs/Resources/Localizable.xcstrings`
+- Modify: Project settings for localization
+
+**Step 1: Enable localization in Xcode**
+
+1. Select project in navigator
+2. Go to Info tab → Localizations
+3. Click + and add:
+   - English (Base)
+   - Chinese (Simplified) - zh-Hans
+   - Chinese (Traditional) - zh-Hant
+
+**Step 2: Create String Catalog**
+
+Create `Localizable.xcstrings` with translations for:
+
+- All UI labels
+- Button titles
+- Status names (Draft, Active, Review, etc.)
+- Priority names
+- Error messages
+
+**Step 3: Add language preference to GeneralSettingsView**
+
+```swift
+// Add to GeneralSettingsView
+@AppStorage("preferredLanguage") private var preferredLanguage = ""
+
+Section("Language") {
+    Picker("App Language", selection: $preferredLanguage) {
+        Text("System Default").tag("")
+        Divider()
+        Text("English").tag("en")
+        Text("简体中文").tag("zh-Hans")
+        Text("繁體中文").tag("zh-Hant")
+    }
+}
+```
+
+**Step 4: Commit**
+
+```bash
+git add -A
+git commit -m "feat: add multilingual support with English and Chinese"
+```
+
+---
+
+## Phase 9: Edit Permissions & Review Mode
+
+### Task 9.1: Add Review Mode State
+
+**Files:**
+
+- Create: `SoloOKRs/Services/ReviewModeManager.swift`
+- Create: `SoloOKRs/Models/Enums/ReviewFrequency.swift`
+
+**Step 1: Create ReviewFrequency enum**
+
+```swift
+// SoloOKRs/Models/Enums/ReviewFrequency.swift
+import Foundation
+
+enum ReviewFrequency: String, Codable, CaseIterable {
+    case weekly = "Weekly"
+    case biweekly = "Every 2 Weeks"
+    case monthly = "Monthly"
+}
+```
+
+**Step 2: Create ReviewModeManager**
+
+```swift
+// SoloOKRs/Services/ReviewModeManager.swift
+import Foundation
+import SwiftUI
+
+@Observable
+@MainActor
+class ReviewModeManager {
+    static let shared = ReviewModeManager()
+
+    @AppStorage("isInReviewMode") private var _isInReviewMode = false
+    @AppStorage("reviewEnabled") var reviewEnabled = true
+    @AppStorage("reviewFrequency") var frequency: ReviewFrequency = .weekly
+    @AppStorage("reviewDayOfWeek") var dayOfWeek: Int = 1  // Monday
+    @AppStorage("reviewHour") var reminderHour: Int = 9
+    @AppStorage("reviewMinute") var reminderMinute: Int = 0
+
+    var isInReviewMode: Bool {
+        get { _isInReviewMode }
+        set { _isInReviewMode = newValue }
+    }
+
+    private init() {}
+
+    func enterReviewMode() {
+        isInReviewMode = true
+    }
+
+    func exitReviewMode() {
+        isInReviewMode = false
+    }
+
+    /// Check if an Objective/KeyResult can be edited
+    func canEdit(status: OKRStatus) -> Bool {
+        switch status {
+        case .draft:
+            return true
+        case .active:
+            return isInReviewMode  // Only editable in review mode
+        case .review:
+            return true
+        case .achieved, .archived:
+            return false
+        }
+    }
+}
+```
+
+**Step 3: Commit**
+
+```bash
+git add -A
+git commit -m "feat: add ReviewModeManager for edit permissions"
+```
+
+---
+
+### Task 9.2: Add Review Mode UI Indicators
+
+**Files:**
+
+- Modify: `SoloOKRs/ContentView.swift`
+- Modify: `SoloOKRs/Views/Objectives/ObjectiveRowView.swift`
+- Create: `SoloOKRs/Views/Settings/ReviewSettingsView.swift`
+
+**Step 1: Add review mode indicator to ContentView toolbar**
+
+```swift
+// Add to ContentView toolbar
+@State private var reviewManager = ReviewModeManager.shared
+
+// In toolbar
+if reviewManager.isInReviewMode {
+    Button {
+        reviewManager.exitReviewMode()
+    } label: {
+        Label("Review Mode", systemImage: "pencil.circle.fill")
+            .foregroundStyle(.orange)
+    }
+    .help("Click to exit Review Mode")
+} else {
+    Button {
+        reviewManager.enterReviewMode()
+    } label: {
+        Label("Enter Review", systemImage: "pencil.circle")
+    }
+}
+```
+
+**Step 2: Create ReviewSettingsView**
+
+```swift
+// SoloOKRs/Views/Settings/ReviewSettingsView.swift
+import SwiftUI
+
+struct ReviewSettingsView: View {
+    @State private var reviewManager = ReviewModeManager.shared
+
+    var body: some View {
+        Form {
+            Section("Review Schedule") {
+                Toggle("Enable Review Reminders", isOn: $reviewManager.reviewEnabled)
+
+                if reviewManager.reviewEnabled {
+                    Picker("Frequency", selection: $reviewManager.frequency) {
+                        ForEach(ReviewFrequency.allCases, id: \.self) { freq in
+                            Text(freq.rawValue).tag(freq)
+                        }
+                    }
+
+                    Picker("Day", selection: $reviewManager.dayOfWeek) {
+                        Text("Monday").tag(1)
+                        Text("Tuesday").tag(2)
+                        Text("Wednesday").tag(3)
+                        Text("Thursday").tag(4)
+                        Text("Friday").tag(5)
+                        Text("Saturday").tag(6)
+                        Text("Sunday").tag(7)
+                    }
+
+                    HStack {
+                        Text("Time")
+                        Spacer()
+                        Text("\(reviewManager.reminderHour):\(String(format: "%02d", reviewManager.reminderMinute))")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Section("Review Mode") {
+                if reviewManager.isInReviewMode {
+                    HStack {
+                        Circle().fill(.orange).frame(width: 10, height: 10)
+                        Text("Review Mode Active")
+                    }
+                    Button("Exit Review Mode") {
+                        reviewManager.exitReviewMode()
+                    }
+                    .foregroundStyle(.orange)
+                } else {
+                    HStack {
+                        Circle().fill(.gray).frame(width: 10, height: 10)
+                        Text("Normal Mode")
+                    }
+                    Button("Enter Review Mode") {
+                        reviewManager.enterReviewMode()
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Review")
+    }
+}
+```
+
+**Step 3: Disable edit controls when not editable**
+
+Update ObjectiveDetailView and KeyResultDetailView to check `ReviewModeManager.shared.canEdit(status:)` before allowing edits.
+
+**Step 4: Commit**
+
+```bash
+git add -A
+git commit -m "feat: add Review Mode UI and settings"
+```
+
+---
+
+## Phase 10: Archiving (No Deletion for OKRs)
+
+### Task 10.1: Update ObjectiveListView for Archive-Only
+
+**Files:**
+
+- Modify: `SoloOKRs/Views/Objectives/ObjectiveListView.swift`
+- Modify: `SoloOKRs/ContentView.swift`
+
+**Step 1: Replace delete with archive**
+
+```swift
+// In ObjectiveListView - replace onDelete with context menu
+ForEach(objectives) { objective in
+    ObjectiveRowView(objective: objective)
+        .tag(objective)
+        .contextMenu {
+            if objective.status == .archived {
+                Button("Unarchive") {
+                    objective.status = .draft
+                    objective.updatedAt = Date()
+                }
+            } else {
+                Button("Archive", role: .destructive) {
+                    archiveObjective(objective)
+                }
+            }
+        }
+}
+// Remove .onDelete(perform:)
+```
+
+**Step 2: Add archive function**
+
+```swift
+private func archiveObjective(_ objective: Objective) {
+    withAnimation {
+        objective.status = .archived
+        objective.archivedAt = Date()
+        objective.updatedAt = Date()
+        if selectedObjective == objective {
+            selectedObjective = nil
+        }
+    }
+}
+```
+
+**Step 3: Add Active/Archived tab picker**
+
+```swift
+// Add to ObjectiveListView
+enum ObjectiveTab: String, CaseIterable {
+    case active = "Active"
+    case archived = "Archived"
+}
+
+@State private var selectedTab: ObjectiveTab = .active
+
+var filteredObjectives: [Objective] {
+    switch selectedTab {
+    case .active:
+        return objectives.filter { $0.status != .archived }
+    case .archived:
+        return objectives.filter { $0.status == .archived }
+    }
+}
+
+// In body, add picker above list
+Picker("", selection: $selectedTab) {
+    ForEach(ObjectiveTab.allCases, id: \.self) { tab in
+        Text(tab.rawValue)
+    }
+}
+.pickerStyle(.segmented)
+.padding(.horizontal)
+```
+
+**Step 4: Commit**
+
+```bash
+git add -A
+git commit -m "feat: replace delete with archive for OKRs"
+```
+
+---
+
+### Task 10.2: Update Objective Model
+
+**Files:**
+
+- Modify: `SoloOKRs/Models/Objective.swift`
+
+**Step 1: Add archivedAt property**
+
+```swift
+// Add to Objective model
+var archivedAt: Date?
+
+/// OKRs are only editable in Draft or Review states
+var isEditable: Bool {
+    status == .draft || status == .review
+}
+```
+
+**Step 2: Commit**
+
+```bash
+git add -A
+git commit -m "feat: add archivedAt and isEditable to Objective model"
+```
 
 ---
 
@@ -2052,8 +2415,11 @@ After implementation, deploy TestFlight build and have user verify:
 | 5. MCP Server   | Server structure placeholder            | ⬜     |
 | 6. Subscription | Manager with trial logic                | ⬜     |
 | 7. Polish       | Liquid Glass, testing                   | ⬜     |
+| 8. Multilingual | Localization, language settings         | ⬜     |
+| 9. Review Mode  | Edit permissions, review schedule       | ⬜     |
+| 10. Archiving   | Archive instead of delete, archive tab  | ⬜     |
 
-**Estimated Total Time:** 4-6 hours for core implementation
+**Estimated Total Time:** 6-8 hours for core implementation
 
 **Next Steps After This Plan:**
 
@@ -2062,3 +2428,5 @@ After implementation, deploy TestFlight build and have user verify:
 3. StoreKit 2 integration for real IAP
 4. Markdown editor with live preview
 5. UI polish and animations
+6. Review mode notifications
+7. Additional language translations
