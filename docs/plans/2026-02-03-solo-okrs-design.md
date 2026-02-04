@@ -578,7 +578,11 @@ struct SoloOKRsApp: App {
 | Setting          | Description                     |
 | ---------------- | ------------------------------- |
 | Default view     | Which column to focus on launch |
+| Review frequency | Weekly, Fortnightly, Monthly    |
+| Review day       | Day of week for review          |
+| Review time      | Time for review reminder        |
 | Date format      | Date display preferences        |
+| Language         | App language                    |
 | Theme            | Follow system / Light / Dark    |
 | Launch at login  | Start app on macOS boot         |
 | Show in menu bar | Optional menu bar icon          |
@@ -662,14 +666,15 @@ The app automatically adapts to the system language while allowing users to set 
 | ------------------- | ------- | -------- |
 | English             | en      | Primary  |
 | Simplified Chinese  | zh-Hans | High     |
-| Traditional Chinese | zh-Hant | High     |
+| Traditional Chinese | zh-Hant | Medium   |
 | Japanese            | ja      | Medium   |
 | Korean              | ko      | Medium   |
-| German              | de      | Medium   |
-| French              | fr      | Medium   |
-| Spanish             | es      | Medium   |
+| German              | de      | High     |
+| French              | fr      | High     |
+| Spanish             | es      | High     |
+| Português do Brasil | pt-BR   | High     |
 
-> **Note:** Start with English + Chinese, add others based on user demand.
+> **Note:** Start with English, add others based on user demand.
 
 ### Implementation
 
@@ -692,7 +697,7 @@ SoloOKRs/Resources/
 │   └── InfoPlist.strings
 ├── zh-Hans.lproj/
 │   └── InfoPlist.strings
-└── zh-Hant.lproj/
+└── de.lproj/
     └── InfoPlist.strings
 ```
 
@@ -716,7 +721,7 @@ Section("Language") {
         Divider()
         Text("English").tag("en")
         Text("简体中文").tag("zh-Hans")
-        Text("繁體中文").tag("zh-Hant")
+        Text("German").tag("de")
         // ... other languages
     }
 }
@@ -737,7 +742,7 @@ Section("Language") {
 | **Objective**   | ✅ Edit   | ❌ Read-only | ✅ Edit   | ❌ Read-only | ❌ Read-only |
 | **Key Result**  | ✅ Edit   | ❌ Read-only | ✅ Edit   | ❌ Read-only | ❌ Read-only |
 | **KR Progress** | ✅ Update | ✅ Update    | ✅ Update | ❌ Read-only | ❌ Read-only |
-| **Task**        | ✅ Full   | ✅ Full      | ✅ Full   | ✅ Full      | ❌ Read-only |
+| **Task**        | ✅ Full   | ✅ Full      | ✅ Full   | ❌ Read-only | ❌ Read-only |
 
 ### State Transitions
 

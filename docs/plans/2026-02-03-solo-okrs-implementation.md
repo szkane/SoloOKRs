@@ -2060,7 +2060,10 @@ After implementation, deploy TestFlight build and have user verify:
 3. Click + and add:
    - English (Base)
    - Chinese (Simplified) - zh-Hans
-   - Chinese (Traditional) - zh-Hant
+   - German - de
+   - French - fr
+   - Spanish - es
+   - Portuguese (Brazil) - pt-BR
 
 **Step 2: Create String Catalog**
 
@@ -2084,7 +2087,11 @@ Section("Language") {
         Divider()
         Text("English").tag("en")
         Text("简体中文").tag("zh-Hans")
-        Text("繁體中文").tag("zh-Hant")
+        Text("Deutsch").tag("de")
+        Text("Français").tag("fr")
+        Text("Español").tag("es")
+        Text("Português").tag("pt-BR")
+        // ... other languages
     }
 }
 ```
@@ -2093,7 +2100,7 @@ Section("Language") {
 
 ```bash
 git add -A
-git commit -m "feat: add multilingual support with English and Chinese"
+git commit -m "feat: add multilingual support with English and high-priority languages"
 ```
 
 ---
@@ -2155,7 +2162,7 @@ class ReviewModeManager {
     }
 
     /// Check if an Objective/KeyResult can be edited
-    func canEdit(status: OKRStatus) -> Bool {
+    func canEditOKR(status: OKRStatus) -> Bool {
         switch status {
         case .draft:
             return true
@@ -2165,6 +2172,16 @@ class ReviewModeManager {
             return true
         case .achieved, .archived:
             return false
+        }
+    }
+
+    /// Check if a Task can be edited (Tasks are read-only when Achieved or Archived)
+    func canEditTask(parentStatus: OKRStatus) -> Bool {
+        switch parentStatus {
+        case .draft, .active, .review:
+            return true  // Tasks always editable in these states
+        case .achieved, .archived:
+            return false  // Tasks read-only when parent Objective is Achieved/Archived
         }
     }
 }
@@ -2280,7 +2297,20 @@ struct ReviewSettingsView: View {
 
 **Step 3: Disable edit controls when not editable**
 
-Update ObjectiveDetailView and KeyResultDetailView to check `ReviewModeManager.shared.canEdit(status:)` before allowing edits.
+Update views to check permissions before allowing edits:
+
+- **ObjectiveDetailView / KeyResultDetailView**: Use `ReviewModeManager.shared.canEditOKR(status:)` to disable form fields when not editable
+- **TaskListView / TaskDetailView**: Use `ReviewModeManager.shared.canEditTask(parentStatus:)` to make tasks read-only when parent Objective is Achieved or Archived
+
+```swift
+// Example in TaskRowView
+Button {
+    // Toggle completion
+} label: {
+    Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+}
+.disabled(!ReviewModeManager.shared.canEditTask(parentStatus: task.keyResult?.objective?.status ?? .draft))
+```
 
 **Step 4: Commit**
 
