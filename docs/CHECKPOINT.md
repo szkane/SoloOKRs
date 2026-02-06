@@ -1,14 +1,14 @@
 # SOLO OKRs - Session Context
 
-> **Last Session:** 2026-02-06 14:03
-> **Current Phase:** All Roadmap Items Complete! 🎉  
+> **Last Session:** 2026-02-06 14:52
+> **Current Phase:** Post-Beta Improvements 🛠️  
 > **Build Status:** ✅ (verified 2026-02-06)
 
 ---
 
 ## 📍 Current Focus
 
-All implementation plan items complete! Ready for testing and App Store submission.
+Starting user-requested improvements (11 items). Plan created at `docs/plans/2026-02-06-post-beta-improvements.md`.
 
 ---
 
@@ -45,9 +45,19 @@ _None currently active._
 
 ---
 
-## 📋 Next Up (from Implementation Plan)
+## 📋 Next Up (from Post-Beta Improvement Plan)
 
-All items complete! ✅
+1. Objective List Tabs & Item Appearance
+2. Review Mode Button Location
+3. Review Mode Behavior & Logic
+4. Edit Permission Matrix Enforcement
+5. New Objective Default Draft
+6. Draft Publish Workflow (AI Analysis)
+7. Key Result List Detail
+8. Task Preview Markdown
+9. Settings - AI Provider UI
+10. Settings - MCP Toggle Fix
+11. App Icon (Gemini)
 
 ---
 
