@@ -150,29 +150,7 @@ Click Publish on a draft. See AI analysis. Click Promote. Verify it moves to Act
 
 ---
 
-### Task 7: Key Result List Detail
-
-**Description:** Redesign KR list to show type-specific details (e.g., "3/5", "50%", "Milestones: 2/4").
-
-**Files:**
-
-- Modify: `src/SoloOKRs/SoloOKRs/Views/KeyResults/KeyResultRowView.swift` (Create/Update)
-
-**Step 1: Create Detailed Row View**
-
-Switch on `keyResult.type`:
-
-- `.numeric`: Show `current / target`
-- `.percentage`: Show `current %`
-- `.milestone`: Show `completed / total` count
-- `.binary`: Show Checkbox
-
-**Step 2: Verify**
-Create different KR types. Verify list display.
-
----
-
-### Task 8: Task Preview Markdown
+### Task 7: Task Preview Markdown
 
 **Description:** Show Markdown description in Task preview (TaskDetailView read-only mode).
 
@@ -189,7 +167,7 @@ Add markdown task description. Switch to view mode. Verify rendering.
 
 ---
 
-### Task 9: Settings - AI Provider UI
+### Task 8: Settings - AI Provider UI
 
 **Description:** Dedicate settings UI for each provider (Model selection list).
 
@@ -211,7 +189,7 @@ Go to Settings -> AI. Select Google Gemini. Pick a model (e.g., gemini-1.5-pro).
 
 ---
 
-### Task 10: Settings - MCP Toggle Fix
+### Task 9: Settings - MCP Toggle Fix
 
 **Description:** Fix "Enable MCP Server" toggle not working.
 
@@ -233,7 +211,7 @@ Toggle MCP in Settings. Check logs for Server Start/Stop.
 
 ---
 
-### Task 11: App Icon (Gemini)
+### Task 10: App Icon (Gemini)
 
 **Description:** Generate and add App Icon.
 

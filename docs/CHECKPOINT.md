@@ -42,26 +42,21 @@ All core phases complete:
 ## 🔄 Active Work
 
 - [x] **Design Correction:** KR types → Task types (**COMPLETED**)
-  - Migrated types from KeyResult to OKRTask
-  - KR progress now = task completion rate
-  - KR selfScore (0-100) for Review Mode
-  - 8 files updated, build verified
+- [x] **Batch 2: UX Core Refinements** (**COMPLETED**)
+  - Tabbed Objective List (Draft, Active, Achieved, Archived)
+  - Review Mode button moved to sidebar bottom
+  - Strict Permission Matrix Check (Active = Read Only unless in Review)
+  - Edit Views (Objective/KR/Task) enforce permissions
 
 ---
 
 ## 📋 Next Up (from Post-Beta Improvement Plan)
 
-1. Objective List Tabs & Item Appearance
-2. Review Mode Button Location
-3. Review Mode Behavior & Logic
-4. Edit Permission Matrix Enforcement
-5. New Objective Default Draft
-6. Draft Publish Workflow (AI Analysis)
-7. Key Result List Detail
-8. Task Preview Markdown
-9. Settings - AI Provider UI
-10. Settings - MCP Toggle Fix
-11. App Icon (Gemini)
+1. Draft Publish Workflow (AI Analysis)
+2. Task Preview Markdown
+3. Settings - AI Provider UI
+4. Settings - MCP Toggle Fix
+5. App Icon (Gemini)
 
 ---
 
