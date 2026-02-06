@@ -47,16 +47,22 @@ All core phases complete:
   - Review Mode button moved to sidebar bottom
   - Strict Permission Matrix Check (Active = Read Only unless in Review)
   - Edit Views (Objective/KR/Task) enforce permissions
+- [x] **Batch 3: AI Settings & Publish Workflow** (**COMPLETED**)
+  - **AI Settings:** Implemented `AIProviderSettingsView` with dynamic model picker (Gemini)
+  - **Publish Workflow:** Draft -> AI Analysis (Markdown support) -> Promote to Active
+  - **Refactor:** Enhanced `AIService` model listing and `ObjectiveListView` analysis UI
+- [x] **Batch 4: User Feedback Fixes** (**COMPLETED**)
+  - **Ollama Generation:** Implemented full `/api/generate` support for Analysis & Suggestions
+  - **Ollama Networking:** Fixed `localhost` vs `127.0.0.1` and Sandbox Entitlements
+  - **Manual Publish:** Added context menu option to skip AI and publish Drafts directly
 
 ---
 
 ## 📋 Next Up (from Post-Beta Improvement Plan)
 
-1. Draft Publish Workflow (AI Analysis)
-2. Task Preview Markdown
-3. Settings - AI Provider UI
-4. Settings - MCP Toggle Fix
-5. App Icon (Gemini)
+1. Task Preview Markdown
+2. Settings - MCP Toggle Fix
+3. App Icon (Gemini)
 
 ---
 
