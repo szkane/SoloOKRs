@@ -63,11 +63,11 @@ _None currently active._
 
 ## 🔗 Quick Links
 
-| Resource            | Path                                                |
-| ------------------- | --------------------------------------------------- |
-| Implementation Plan | `docs/plans/2026-02-03-solo-okrs-implementation.md` |
-| Design Doc          | `docs/plans/2026-02-03-solo-okrs-design.md`         |
-| Source Code         | `src/SoloOKRs/SoloOKRs/`                            |
+| Resource         | Path                                              |
+| ---------------- | ------------------------------------------------- |
+| Improvement Plan | `docs/plans/2026-02-06-post-beta-improvements.md` |
+| Design Doc       | `docs/plans/2026-02-03-solo-okrs-design.md`       |
+| Source Code      | `src/SoloOKRs/SoloOKRs/`                          |
 
 ---
 
