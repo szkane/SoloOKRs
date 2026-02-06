@@ -1,8 +1,8 @@
 # SOLO OKRs - Session Context
 
-> **Last Session:** 2026-02-06 14:52
-> **Current Phase:** Post-Beta Improvements 🛠️  
-> **Build Status:** ✅ (verified 2026-02-06)
+> **Last Session:** 2026-02-06 21:55
+> **Current Phase:** Post-Beta Improvements + Design Correction 🛠️  
+> **Build Status:** ✅ (verified 2026-02-06 21:55)
 
 ---
 
@@ -41,7 +41,10 @@ All core phases complete:
 
 ## 🔄 Active Work
 
-_None currently active._
+- **Design Correction:** KR types → Task types (see `2026-02-06-kr-type-migration.md`)
+  - KR progress now = task completion rate
+  - KR self-score (0-100) for Review Mode
+  - Awaiting approval before code migration
 
 ---
 
@@ -63,21 +66,22 @@ _None currently active._
 
 ## 🔗 Quick Links
 
-| Resource         | Path                                              |
-| ---------------- | ------------------------------------------------- |
-| Improvement Plan | `docs/plans/2026-02-06-post-beta-improvements.md` |
-| Design Doc       | `docs/plans/2026-02-03-solo-okrs-design.md`       |
-| Source Code      | `src/SoloOKRs/SoloOKRs/`                          |
+| Resource           | Path                                              |
+| ------------------ | ------------------------------------------------- |
+| **Migration Plan** | `docs/plans/2026-02-06-kr-type-migration.md`      |
+| Improvement Plan   | `docs/plans/2026-02-06-post-beta-improvements.md` |
+| Design Doc         | `docs/plans/2026-02-03-solo-okrs-design.md`       |
+| Source Code        | `src/SoloOKRs/SoloOKRs/`                          |
 
 ---
 
 ## 📝 Session Notes
 
-| Date       | Summary                                                                                                                                                                          |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-06 | **All roadmap items complete!** 6 features: SwiftNIO MCP server, StoreKit 2 IAP, Markdown editor, UI animations, Review notifications, Chinese localization. Build ✅            |
-| 2026-02-06 | Markdown editor with live preview. Created `MarkdownEditorView.swift` with toolbar and AttributedString rendering. Integrated into `TaskDetailView.swift`.                       |
-| 2026-02-06 | StoreKit 2 integration: product loading, purchase flow, transaction listener, restore. Products: lifetime ($29.9) + monthly ($1.99).                                             |
-| 2026-02-06 | Refactored MCP server from Network framework to SwiftNIO (NIOCore, NIOPosix, NIOHTTP1). Created `NIOHTTPServer.swift`, `HTTPRequestHandler.swift`. Build verified.               |
-| 2026-02-05 | Completed Gemini AI integration, MCP server with native Network framework, resolved build errors                                                                                 |
-| 2026-02-05 | Documentation reorganization: created `/init` and `/sync` workflows, refined CHECKPOINT.md. **Workflow Improvements:** Added git commit on sync and priority build fixing rules. |
+| Date       | Summary                                                                                                                                                                                                                                                                             |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-06 | **Design Correction Identified:** KR types (percentage/numeric/milestone/binary) should be on Tasks. Created migration plan. UX refinements: EditKeyResultView with type-specific editors (centered percentage slider, stepper-based numeric). Single/double-click selection fixed. |
+| 2026-02-06 | Markdown editor with live preview. Created `MarkdownEditorView.swift` with toolbar and AttributedString rendering. Integrated into `TaskDetailView.swift`.                                                                                                                          |
+| 2026-02-06 | StoreKit 2 integration: product loading, purchase flow, transaction listener, restore. Products: lifetime ($29.9) + monthly ($1.99).                                                                                                                                                |
+| 2026-02-06 | Refactored MCP server from Network framework to SwiftNIO (NIOCore, NIOPosix, NIOHTTP1). Created `NIOHTTPServer.swift`, `HTTPRequestHandler.swift`. Build verified.                                                                                                                  |
+| 2026-02-05 | Completed Gemini AI integration, MCP server with native Network framework, resolved build errors                                                                                                                                                                                    |
+| 2026-02-05 | Documentation reorganization: created `/init` and `/sync` workflows, refined CHECKPOINT.md. **Workflow Improvements:** Added git commit on sync and priority build fixing rules.                                                                                                    |
