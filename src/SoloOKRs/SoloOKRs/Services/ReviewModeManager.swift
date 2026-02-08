@@ -154,4 +154,15 @@ class ReviewModeManager {
             return false
         }
     }
+    
+    /// Check if Tasks can be added/edited for a given KeyResult
+    func canEditTask(for keyResult: KeyResult) -> Bool {
+        guard let status = keyResult.objective?.status else { return true }
+        switch status {
+        case .draft, .active, .review:
+            return true
+        case .achieved, .archived:
+            return false
+        }
+    }
 }

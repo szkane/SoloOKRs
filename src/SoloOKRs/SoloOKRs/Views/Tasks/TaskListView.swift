@@ -27,7 +27,7 @@ struct TaskListView: View {
                     openWindow(id: "addTask")
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(!keyResult.isEditable)
+                .disabled(!ReviewModeManager.shared.canEditTask(for: keyResult))
                 .padding()
             }
         }

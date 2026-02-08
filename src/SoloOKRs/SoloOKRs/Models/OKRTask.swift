@@ -71,9 +71,9 @@ final class OKRTask {
         }
     }
     
-    /// Tasks follow parent Objective's editability
+    /// Tasks are editable in Draft, Active, Review; only Achieved/Archived are read-only
     @MainActor
     var isEditable: Bool {
-        keyResult?.isEditable ?? true
+        ReviewModeManager.shared.canEditTask(self)
     }
 }

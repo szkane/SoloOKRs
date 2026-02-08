@@ -46,6 +46,10 @@ All core phases complete:
 
 None.
 
+### ✅ Fixed: Task Edit Permissions (2026-02-08)
+
+`OKRTask.isEditable` now uses `ReviewModeManager.canEditTask()`. Tasks are editable in Draft/Active/Review, read-only in Achieved/Archived.
+
 ---
 
 ## 📋 Next Up (from Post-Beta Improvement Plan)
