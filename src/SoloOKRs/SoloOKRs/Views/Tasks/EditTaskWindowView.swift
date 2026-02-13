@@ -1,7 +1,7 @@
 // EditTaskWindowView.swift
 // SoloOKRs
 //
-// Wrapper view for Edit Task window - uses AppStorage to receive task ID
+// Updated on 2026-02-13: Simplified — no task types, no subtasks.
 
 import SwiftUI
 import SwiftData
@@ -55,27 +55,18 @@ struct EditTaskContent: View {
                 }
                 .disabled(!task.isEditable)
                 
-                Section("Type") {
-                    Label(task.type.displayName, systemImage: task.type.icon)
-                        .foregroundStyle(task.type.iconColor)
-                }
-                
-                Section("Progress") {
-                    TaskProgressEditor(task: task)
+                Section("Status") {
+                    Toggle("Completed", isOn: $task.isCompleted)
                 }
                 .disabled(!task.isEditable)
                 
-                Section("Priority & Status") {
+                Section("Priority") {
                     Picker("Priority", selection: $task.priority) {
                         ForEach(Priority.allCases, id: \.self) { priority in
                             Label(priority.displayName, systemImage: priority.icon)
                                 .foregroundColor(priority.color)
                                 .tag(priority)
                         }
-                    }
-                    
-                    if task.type == .simple {
-                        Toggle("Completed", isOn: $task.isCompleted)
                     }
                 }
                 .disabled(!task.isEditable)

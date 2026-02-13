@@ -1,7 +1,7 @@
 // TaskDetailView.swift
 // SoloOKRs
 //
-// Created by Claude on 2026-02-04.
+// Updated on 2026-02-13: Simplified — no task types, no subtasks.
 
 import SwiftUI
 

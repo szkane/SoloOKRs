@@ -1,7 +1,7 @@
 // TaskListView.swift
 // SoloOKRs
 //
-// Created by Claude on 2026-02-04.
+// Updated on 2026-02-13: Simplified — no task types, no subtasks.
 
 import SwiftUI
 import SwiftData
@@ -56,28 +56,20 @@ struct TaskRowView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Task Type Icon
-            Image(systemName: task.type.icon)
+            // Completion checkbox
+            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                 .font(.title2)
-                .foregroundStyle(task.type.iconColor)
+                .foregroundStyle(task.isCompleted ? .green : .secondary)
                 .frame(width: 28)
             
             VStack(alignment: .leading, spacing: 4) {
-                // Title + Completion Status
-                HStack {
-                    Text(task.title)
-                        .font(.headline)
-                        .strikethrough(task.isCompleted)
-                        .foregroundStyle(task.isCompleted ? .secondary : .primary)
-                    
-                    if task.isCompleted {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                            .font(.subheadline)
-                    }
-                }
+                // Title
+                Text(task.title)
+                    .font(.headline)
+                    .strikethrough(task.isCompleted)
+                    .foregroundStyle(task.isCompleted ? .secondary : .primary)
                 
-                // Due date (below title)
+                // Due date
                 if let dueDate = task.dueDate {
                     Text(dueDate, style: .date)
                         .font(.caption)
@@ -109,7 +101,7 @@ struct TaskRowView: View {
             
             Spacer()
             
-            // Priority Badge (right side)
+            // Priority Badge
             Text(task.priority.displayName)
                 .font(.caption)
                 .foregroundStyle(task.priority.color)

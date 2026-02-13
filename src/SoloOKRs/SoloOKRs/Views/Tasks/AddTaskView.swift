@@ -1,7 +1,7 @@
 // AddTaskView.swift
 // SoloOKRs
 //
-// Updated on 2026-02-06: Added type picker after KR type migration.
+// Updated on 2026-02-13: Simplified — no task types, no subtasks.
 
 import SwiftUI
 import SwiftData
@@ -14,13 +14,9 @@ struct AddTaskView: View {
     
     @State private var title = ""
     @State private var description = ""
-    @State private var type: TaskType = .simple
     @State private var hasDueDate = false
     @State private var dueDate = Date()
     @State private var priority: Priority = .medium
-    @State private var targetValue: Double = 100
-    @State private var milestoneText = ""
-    @State private var milestones: [String] = []
     
     // AI State
     @State private var suggestions: [String] = []
@@ -37,68 +33,20 @@ struct AddTaskView: View {
                             .font(.title3)
                     }
                     
-                    Section("Type") {
-                        Picker("Type", selection: $type.animation()) {
-                            ForEach(TaskType.allCases, id: \.self) { type in
-                                Label(type.displayName, systemImage: type.icon)
-                                    .tag(type)
-                            }
+                    Section("Due Date") {
+                        Toggle("Set Due Date", isOn: $hasDueDate)
+                        if hasDueDate {
+                            DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
                         }
-                        .pickerStyle(.segmented)
                     }
-                        
-                        // Type-Specific Setup
-                        if type == .numeric {
-                            Section("Target Value") {
-                                HStack {
-                                    Text("Target:")
-                                    TextField("", value: $targetValue, format: .number)
-                                        .textFieldStyle(.roundedBorder)
-                                        .frame(width: 100)
-                                }
-                            }
-                        } else if type == .milestone {
-                            Section("Milestones") {
-                                ForEach(milestones.indices, id: \.self) { index in
-                                    HStack {
-                                        Text("\(index + 1).")
-                                        Text(milestones[index])
-                                        Spacer()
-                                        Button(role: .destructive) {
-                                            milestones.remove(at: index)
-                                        } label: {
-                                            Image(systemName: "minus.circle")
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                HStack {
-                                    TextField("Add milestone...", text: $milestoneText)
-                                    Button("Add") {
-                                        if !milestoneText.isEmpty {
-                                            milestones.append(milestoneText)
-                                            milestoneText = ""
-                                        }
-                                    }
-                                    .disabled(milestoneText.isEmpty)
-                                }
+                    
+                    Section("Priority") {
+                        Picker("Priority", selection: $priority) {
+                            ForEach(Priority.allCases, id: \.self) { priority in
+                                Label(priority.displayName, systemImage: priority.icon)
+                                    .tag(priority)
                             }
                         }
-                        
-                        Section("Due Date") {
-                            Toggle("Set Due Date", isOn: $hasDueDate)
-                            if hasDueDate {
-                                DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
-                            }
-                        }
-                        
-                        Section("Priority") {
-                            Picker("Priority", selection: $priority) {
-                                ForEach(Priority.allCases, id: \.self) { priority in
-                                    Label(priority.displayName, systemImage: priority.icon)
-                                        .tag(priority)
-                                }
-                            }
                         .pickerStyle(.segmented)
                     }
                 }
@@ -196,25 +144,10 @@ struct AddTaskView: View {
         let task = OKRTask(
             title: title,
             taskDescription: description,
-            type: type,
             dueDate: hasDueDate ? dueDate : nil,
             priority: priority,
             order: keyResult.tasks.count
         )
-        
-        // Set type-specific values
-        switch type {
-        case .numeric:
-            task.targetValue = targetValue
-            task.currentValue = 0
-        case .milestone:
-            task.milestones = milestones
-            task.completedMilestones = Array(repeating: false, count: milestones.count)
-        case .percentage:
-            task.currentValue = 0
-        case .simple:
-            break
-        }
         
         task.keyResult = keyResult
         modelContext.insert(task)

@@ -1,6 +1,6 @@
-> **Last Session:** 2026-02-08 23:00
+> **Last Session:** 2026-02-13 16:21
 > **Current Phase:** Post-Beta Improvements + User Feedback 🛠️  
-> **Build Status:** ✅ (verified 2026-02-08 23:00)
+> **Build Status:** ✅ (verified 2026-02-13 16:21)
 
 ---
 
@@ -39,6 +39,7 @@ All core phases complete:
 - [x] **Batch 3: AI Settings & Publish Workflow** (Model Picker, Publish Logic)
 - [x] **Batch 4: User Feedback Fixes** (Ollama Support, Manual Publish)
 - [x] **Task Preview Markdown with Syntax Highlighting**
+- [x] **Task Refactoring:** Removed task-type system (simple/percentage/numeric/milestone), added subtask support
 
 ---
 
@@ -74,6 +75,7 @@ None.
 
 | Date       | Summary                                                                                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-02-13 | **Task Refactoring:** Removed task-type system (TaskType enum + all type-specific fields/UI). Simplified tasks to basic checkbox items. 8 files modified, 1 deleted. Build ✅                                                                    |
 | 2026-02-08 | **Markdown Enhancements:** Integrated MarkdownUI + Splash for syntax highlighting. Created `SplashCodeSyntaxHighlighter.swift`. Fixed Markdown preview padding using card container. Added table button. Increased Add Task form width. Build ✅ |
 | 2026-02-06 | **Completed Batch 4 (User Feedback Fixes):** Fixed Ollama analysis routing (was using Gemini), implemented proper Ollama API calls (`/api/generate`), handled "unregistered caller" error, and added Manual Publish context menu. Build ✅       |
 | 2026-02-06 | **Completed Batch 3 & 2:** Implemented AI Model Picker, Draft->Active Workflow, Tabbed Objective List, and Review Mode refinements. Fixed "Operation not permitted" via App Sandbox entitlements. Build ✅                                       |

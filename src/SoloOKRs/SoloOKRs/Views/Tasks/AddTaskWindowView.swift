@@ -1,7 +1,7 @@
 // AddTaskWindowView.swift
 // SoloOKRs
 //
-// Wrapper view for Add Task window - uses AppStorage to receive keyResult ID
+// Updated on 2026-02-13: Simplified — no task types, no subtasks.
 
 import SwiftUI
 import SwiftData
@@ -42,13 +42,9 @@ struct AddTaskContent: View {
     
     @State private var title = ""
     @State private var description = ""
-    @State private var type: TaskType = .simple
     @State private var priority: Priority = .medium
     @State private var dueDate: Date = Date()
     @State private var hasDueDate = false
-    @State private var targetValue: Double = 100
-    @State private var milestones: [String] = []
-    @State private var milestoneText = ""
     
     var body: some View {
         HSplitView {
@@ -57,53 +53,6 @@ struct AddTaskContent: View {
                 Section("Title") {
                     TextField("", text: $title)
                         .font(.title3)
-                }
-                
-                Section("Type") {
-                    Picker("Type", selection: $type.animation()) {
-                        ForEach(TaskType.allCases, id: \.self) { type in
-                            Label(type.displayName, systemImage: type.icon)
-                                .tag(type)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
-                
-                if type == .numeric {
-                    Section("Target Value") {
-                        HStack {
-                            Text("Target:")
-                            TextField("", value: $targetValue, format: .number)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 100)
-                        }
-                    }
-                } else if type == .milestone {
-                    Section("Milestones") {
-                        ForEach(milestones.indices, id: \.self) { index in
-                            HStack {
-                                Text("\(index + 1).")
-                                Text(milestones[index])
-                                Spacer()
-                                Button(role: .destructive) {
-                                    milestones.remove(at: index)
-                                } label: {
-                                    Image(systemName: "minus.circle")
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        HStack {
-                            TextField("Add milestone...", text: $milestoneText)
-                            Button("Add") {
-                                if !milestoneText.isEmpty {
-                                    milestones.append(milestoneText)
-                                    milestoneText = ""
-                                }
-                            }
-                            .disabled(milestoneText.isEmpty)
-                        }
-                    }
                 }
                 
                 Section("Due Date") {
@@ -159,24 +108,11 @@ struct AddTaskContent: View {
     }
     
     private func saveTask() {
-        let task = OKRTask(title: title, type: type)
+        let task = OKRTask(title: title)
         task.taskDescription = description
         task.priority = priority
         task.dueDate = hasDueDate ? dueDate : nil
         task.keyResult = keyResult
-        
-        switch type {
-        case .simple:
-            break
-        case .percentage:
-            task.currentValue = 0
-        case .numeric:
-            task.targetValue = targetValue
-            task.currentValue = 0
-        case .milestone:
-            task.milestones = milestones
-            task.completedMilestones = milestones.map { _ in false }
-        }
         
         modelContext.insert(task)
         keyResult.tasks.append(task)
