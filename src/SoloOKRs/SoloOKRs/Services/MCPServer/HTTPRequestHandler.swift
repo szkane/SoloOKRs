@@ -15,15 +15,10 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
     private var requestHead: HTTPRequestHead?
     private var bodyBuffer: ByteBuffer?
     
-    private let onPOST: @Sendable (Data) async throws -> Data
-    private let onSSE: @Sendable (@escaping (String) -> Void) -> Void
+    private let delegate: MCPDelegate
     
-    init(
-        onPOST: @escaping @Sendable (Data) async throws -> Data,
-        onSSE: @escaping @Sendable (@escaping (String) -> Void) -> Void
-    ) {
-        self.onPOST = onPOST
-        self.onSSE = onSSE
+    init(delegate: MCPDelegate) {
+        self.delegate = delegate
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -53,10 +48,10 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
         let path = head.uri.split(separator: "?").first.map(String.init) ?? head.uri
         
         switch (head.method, path) {
-        case (.POST, "/message"):
+        case (.POST, "/mcp"), (.POST, "/message"):
             handlePOSTMessage(context: context, body: body)
             
-        case (.GET, "/sse"):
+        case (.GET, "/mcp"), (.GET, "/sse"):
             handleSSE(context: context)
             
         case (.OPTIONS, _):
@@ -70,17 +65,32 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
     
     private func handlePOSTMessage(context: ChannelHandlerContext, body: ByteBuffer?) {
         guard let body = body else {
-            sendResponse(context: context, status: .badRequest, body: "Missing body")
+            sendResponse(context: context, status: .badRequest, contentType: "application/json", body: "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32700,\"message\":\"Missing body\"},\"id\":null}")
             return
         }
         
-        let data = Data(body.readableBytesView)
+        // Force deep copy via Array
+        let bytes = Array(body.readableBytesView)
+        print("HTTPRequestHandler BEFORE TASK: \(bytes.count) bytes")
+        
+        // Debug: respond immediately if body is empty
+        if bytes.isEmpty {
+            sendResponse(
+                context: context,
+                status: .ok,
+                contentType: "application/json",
+                body: "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32700,\"message\":\"Empty body! readableBytes=\(body.readableBytes)\"},\"id\":null}"
+            )
+            return
+        }
+        
         let channel = context.channel
         
         // Process async on a Task, then write response back
-        Task { @Sendable in
+        Task { @Sendable [bytes] in
+            print("HTTPRequestHandler INSIDE TASK: Byte count \(bytes.count)")
             do {
-                let responseData = try await self.onPOST(data)
+                let responseData = try await self.delegate.handlePOST(bytes: bytes)
                 let responseString = String(decoding: responseData, as: UTF8.self)
                 
                 // Write response back on the event loop
@@ -96,10 +106,12 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
             } catch {
                 channel.eventLoop.execute {
                     guard channel.isActive else { return }
+                    let errorJSON = "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"\(error.localizedDescription)\"},\"id\":null}"
                     self.sendResponseOnChannel(
                         channel: channel,
-                        status: .internalServerError,
-                        body: error.localizedDescription
+                        status: .ok,
+                        contentType: "application/json",
+                        body: errorJSON
                     )
                 }
             }
@@ -118,9 +130,19 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
         context.write(wrapOutboundOut(.head(head)), promise: nil)
         context.flush()
         
-        // Provide send closure to delegate
         let channel = context.channel
-        onSSE { message in
+        
+        // Send the MCP endpoint event (required by SSE transport spec)
+        // This tells the client where to POST JSON-RPC messages
+        channel.eventLoop.execute {
+            var buffer = channel.allocator.buffer(capacity: 64)
+            buffer.writeString("event: endpoint\ndata: /message\n\n")
+            channel.write(NIOAny(HTTPServerResponsePart.body(.byteBuffer(buffer))), promise: nil)
+            channel.flush()
+        }
+        
+        // Provide send closure to delegate
+        delegate.handleSSE { message in
             guard channel.isActive else { return }
             channel.eventLoop.execute {
                 var buffer = channel.allocator.buffer(capacity: message.utf8.count + 10)

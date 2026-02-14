@@ -8,23 +8,23 @@ import NIOCore
 import NIOPosix
 import NIOHTTP1
 
+/// Delegate protocol for handling MCP requests
+protocol MCPDelegate: Sendable {
+    func handlePOST(bytes: [UInt8]) async throws -> Data
+    func handleSSE(send: @escaping @Sendable (String) -> Void)
+}
+
 /// HTTP server using SwiftNIO for the MCP protocol
 final class NIOHTTPServer: @unchecked Sendable {
     private let port: Int
     private var channel: Channel?
     private var group: MultiThreadedEventLoopGroup?
     
-    private let onPOST: @Sendable (Data) async throws -> Data
-    private let onSSE: @Sendable (@escaping (String) -> Void) -> Void
+    private let delegate: MCPDelegate
     
-    init(
-        port: Int,
-        onPOST: @escaping @Sendable (Data) async throws -> Data,
-        onSSE: @escaping @Sendable (@escaping (String) -> Void) -> Void
-    ) {
+    init(port: Int, delegate: MCPDelegate) {
         self.port = port
-        self.onPOST = onPOST
-        self.onSSE = onSSE
+        self.delegate = delegate
     }
     
     /// Start the server on the configured port
@@ -32,8 +32,7 @@ final class NIOHTTPServer: @unchecked Sendable {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         self.group = group
         
-        let onPOST = self.onPOST
-        let onSSE = self.onSSE
+        let delegate = self.delegate
         
         let bootstrap = ServerBootstrap(group: group)
             .serverChannelOption(.backlog, value: 256)
@@ -41,7 +40,7 @@ final class NIOHTTPServer: @unchecked Sendable {
             .childChannelInitializer { channel in
                 channel.pipeline.configureHTTPServerPipeline().flatMap {
                     channel.pipeline.addHandler(
-                        HTTPRequestHandler(onPOST: onPOST, onSSE: onSSE)
+                        HTTPRequestHandler(delegate: delegate)
                     )
                 }
             }

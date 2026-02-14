@@ -217,7 +217,7 @@ struct ObjectiveListView: View {
         withAnimation {
             objective.status = .active
             objective.updatedAt = Date()
-            // If we are in Draft tab, this objective will disappear from view, which is expected
+            selectedTab = .active
         }
     }
     
