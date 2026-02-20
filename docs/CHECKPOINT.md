@@ -1,6 +1,6 @@
-> **Last Session:** 2026-02-20 19:06
+> **Last Session:** 2026-02-20 23:25
 > **Current Phase:** Post-Beta Improvements + User Feedback 🛠️  
-> **Build Status:** ✅ (verified 2026-02-20 19:06)
+> **Build Status:** ✅ (verified 2026-02-20 23:25)
 
 ---
 
@@ -42,6 +42,8 @@ All core phases complete:
 - [x] **Task Refactoring:** Removed task-type system (simple/percentage/numeric/milestone), added subtask support
 - [x] **MCP Server Stability:** Fixed critical crash & hang via Delegate pattern + optimization
 - [x] **MCP Unix Domain Socket Transport:** Added UDS transport with `MCPTransportType` picker, `NIOUDSServer`, `UDSChannelHandler` (stdio protocol). Verified end-to-end.
+- [x] **App Icon:** Designed Apple-style flat app icon and generated macOS sizes.
+- [x] **Multilingual Support:** Implemented 8 new languages via String Catalog and translation generation.
 
 ---
 
@@ -49,20 +51,11 @@ All core phases complete:
 
 None.
 
-### ✅ Added: App Icon (2026-02-20)
-
-Designed Apple-style flat app icon (blue gradient + white bullseye with checkmark). Generated all macOS icon sizes (16×16 through 1024×1024). Integrated into `AppIcon.appiconset` with updated `Contents.json`. Build verified ✅ with zero warnings.
-
-### ✅ Added: UDS MCP Transport (2026-02-20)
-
-Added Unix Domain Socket as an alternative MCP transport. `NIOUDSServer` + `UDSChannelHandler` (newline-delimited JSON, stdio MCP protocol). `MCPTransportType` picker in Settings. Bypassed `tools/list` and `notifications/initialized` from Main Actor for reliability. Verified socket at App Sandbox path.
-
 ---
 
 ## 📋 Next Up (from Post-Beta Improvement Plan)
 
-1. ~~App Icon~~ ✅
-2. Global Search
+1. ~~Multiple language support.~~ (Completed)
 
 ---
 
@@ -81,6 +74,7 @@ Added Unix Domain Socket as an alternative MCP transport. `NIOUDSServer` + `UDSC
 
 | Date       | Summary                                                                                                                                                                                                                                                                                                                          |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-20 | **Multilingual Support:** Added 8 new languages (zh-Hans, zh-Hant, ja, ko, de, fr, es, pt-BR) to `Localizable.xcstrings` and updated Xcode `knownRegions`. Compiled 1536 translated strings. Build ✅                                                                                                                            |
 | 2026-02-20 | **MCP Unix Domain Socket Transport:** Added `NIOUDSServer.swift` + `UDSChannelHandler.swift` (stdio newline-JSON protocol). Added `MCPTransportType` enum + segmented picker in Settings. Fixed `tools/list` -32000 error by bypassing Main Actor for static responses. Verified with Python socket test. Build ✅               |
 | 2026-02-14 | **MCP Server Stability:** Fixed critical `EXC_BAD_ACCESS` crash by refactoring `MCPServer` to use Delegate pattern (avoiding closure capture issues). Implemented `initialize` bypass for instant connection. Expanded `MCPRouter` with full CRUD tools (12 total). Fixed port number formatting. Verified with `curl`. Build ✅ |
 | 2026-02-13 | **Task Refactoring:** Removed task-type system (TaskType enum + all type-specific fields/UI). Simplified tasks to basic checkbox items. 8 files modified, 1 deleted. Build ✅                                                                                                                                                    |
