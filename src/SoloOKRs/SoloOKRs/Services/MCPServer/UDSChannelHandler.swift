@@ -5,7 +5,7 @@
 // Unlike HTTPRequestHandler, this speaks plain JSON separated by newlines — no HTTP framing.
 
 import Foundation
-import NIOCore
+@preconcurrency import NIOCore
 
 /// Handles a persistent Unix Domain Socket connection using newline-delimited JSON-RPC.
 /// Each request is a single JSON object followed by `\n`.
@@ -49,7 +49,7 @@ final class UDSChannelHandler: ChannelInboundHandler, @unchecked Sendable {
                     var out = channel.allocator.buffer(capacity: responseData.count + 1)
                     out.writeBytes(responseData)
                     out.writeString("\n")
-                    channel.writeAndFlush(NIOAny(out), promise: nil)
+                    _ = channel.pipeline.syncOperations.writeAndFlush(NIOAny(out))
                 }
             } catch {
                 let errLine = """
@@ -59,7 +59,7 @@ final class UDSChannelHandler: ChannelInboundHandler, @unchecked Sendable {
                     guard channel.isActive else { return }
                     var out = channel.allocator.buffer(capacity: errLine.utf8.count)
                     out.writeString(errLine)
-                    channel.writeAndFlush(NIOAny(out), promise: nil)
+                    _ = channel.pipeline.syncOperations.writeAndFlush(NIOAny(out))
                 }
             }
         }

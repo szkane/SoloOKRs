@@ -4,7 +4,7 @@
 // SwiftNIO HTTP channel handler for MCP server
 
 import Foundation
-import NIOCore
+@preconcurrency import NIOCore
 import NIOHTTP1
 
 /// Accumulates HTTP request parts and routes to the appropriate handler
@@ -147,7 +147,7 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
         channel.eventLoop.execute {
             var buffer = channel.allocator.buffer(capacity: 64)
             buffer.writeString("event: endpoint\ndata: /message\n\n")
-            channel.write(NIOAny(HTTPServerResponsePart.body(.byteBuffer(buffer))), promise: nil)
+            channel.writeHTTPPart(.body(.byteBuffer(buffer)), promise: nil)
             channel.flush()
         }
         
@@ -157,7 +157,7 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
             channel.eventLoop.execute {
                 var buffer = channel.allocator.buffer(capacity: message.utf8.count + 10)
                 buffer.writeString("data: \(message)\n\n")
-                channel.write(NIOAny(HTTPServerResponsePart.body(.byteBuffer(buffer))), promise: nil)
+                channel.writeHTTPPart(.body(.byteBuffer(buffer)), promise: nil)
                 channel.flush()
             }
         }
@@ -190,9 +190,9 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
         var buffer = channel.allocator.buffer(capacity: body.utf8.count)
         buffer.writeString(body)
         
-        channel.write(NIOAny(HTTPServerResponsePart.head(head)), promise: nil)
-        channel.write(NIOAny(HTTPServerResponsePart.body(.byteBuffer(buffer))), promise: nil)
-        channel.writeAndFlush(NIOAny(HTTPServerResponsePart.end(nil))).whenComplete { _ in
+        channel.writeHTTPPart(.head(head), promise: nil)
+        channel.writeHTTPPart(.body(.byteBuffer(buffer)), promise: nil)
+        channel.writeAndFlushHTTPPart(.end(nil)).whenComplete { _ in
             channel.close(promise: nil)
         }
     }
@@ -200,5 +200,22 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
     func errorCaught(context: ChannelHandlerContext, error: Error) {
         print("HTTPRequestHandler error: \(error)")
         context.close(promise: nil)
+    }
+}
+
+// MARK: - Typed Channel Write Helpers (sync, must be called on the channel's event loop)
+
+private extension Channel {
+    /// Writes an `HTTPServerResponsePart` synchronously (must be on event loop).
+    func writeHTTPPart(_ part: HTTPServerResponsePart, promise: EventLoopPromise<Void>?) {
+        pipeline.syncOperations.write(NIOAny(part), promise: promise)
+    }
+
+    /// Writes and flushes an `HTTPServerResponsePart` synchronously (must be on event loop).
+    @discardableResult
+    func writeAndFlushHTTPPart(_ part: HTTPServerResponsePart) -> EventLoopFuture<Void> {
+        pipeline.syncOperations.write(NIOAny(part), promise: nil)
+        pipeline.syncOperations.flush()
+        return eventLoop.makeSucceededVoidFuture()
     }
 }
