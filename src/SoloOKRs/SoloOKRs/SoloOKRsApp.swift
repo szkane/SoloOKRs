@@ -8,6 +8,8 @@ import SwiftData
 
 @main
 struct SoloOKRsApp: App {
+    @AppStorage("preferredLanguage") private var preferredLanguage = ""
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Objective.self,
@@ -30,6 +32,8 @@ struct SoloOKRsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
+                .id(preferredLanguage) // Force redraw when language changes
                 .onAppear {
                     MCPServer.shared.configure(modelContext: sharedModelContainer.mainContext)
                     
@@ -45,6 +49,8 @@ struct SoloOKRsApp: App {
         // Edit Task Window - resizable and movable
         Window("Edit Task", id: "editTask") {
             EditTaskWindowView()
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
+                .id(preferredLanguage)
         }
         .modelContainer(sharedModelContainer)
         .defaultSize(width: 1000, height: 700)
@@ -53,6 +59,8 @@ struct SoloOKRsApp: App {
         // Add Task Window - resizable and movable
         Window("New Task", id: "addTask") {
             AddTaskWindowView()
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
+                .id(preferredLanguage)
         }
         .modelContainer(sharedModelContainer)
         .defaultSize(width: 1000, height: 700)
@@ -60,6 +68,8 @@ struct SoloOKRsApp: App {
         
         Settings {
             SettingsView()
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
+                .id(preferredLanguage)
         }
         #endif
     }
