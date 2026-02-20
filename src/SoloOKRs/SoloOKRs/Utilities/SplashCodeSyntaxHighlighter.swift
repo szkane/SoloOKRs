@@ -58,7 +58,11 @@ extension TextOutputFormat {
         }
         
         func build() -> Text {
-            accumulatedText.reduce(Text(""), +)
+            var result = Text("")
+            for part in accumulatedText {
+                result = result + part
+            }
+            return result
         }
         
         private func color(for tokenType: TokenType) -> SwiftUI.Color {
