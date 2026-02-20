@@ -1,6 +1,6 @@
-> **Last Session:** 2026-02-14 11:41
+> **Last Session:** 2026-02-20 19:06
 > **Current Phase:** Post-Beta Improvements + User Feedback 🛠️  
-> **Build Status:** ✅ (verified 2026-02-14 11:41)
+> **Build Status:** ✅ (verified 2026-02-20 19:06)
 
 ---
 
@@ -41,6 +41,7 @@ All core phases complete:
 - [x] **Task Preview Markdown with Syntax Highlighting**
 - [x] **Task Refactoring:** Removed task-type system (simple/percentage/numeric/milestone), added subtask support
 - [x] **MCP Server Stability:** Fixed critical crash & hang via Delegate pattern + optimization
+- [x] **MCP Unix Domain Socket Transport:** Added UDS transport with `MCPTransportType` picker, `NIOUDSServer`, `UDSChannelHandler` (stdio protocol). Verified end-to-end.
 
 ---
 
@@ -48,15 +49,19 @@ All core phases complete:
 
 None.
 
-### ✅ Fixed: MCP Server Crash & Hang (2026-02-14)
+### ✅ Added: App Icon (2026-02-20)
 
-Refactored `MCPServer` to use **Delegate Pattern** to resolve `EXC_BAD_ACCESS` memory corruption caused by closure capture. Implemented `initialize` bypass for instant connection.
+Designed Apple-style flat app icon (blue gradient + white bullseye with checkmark). Generated all macOS icon sizes (16×16 through 1024×1024). Integrated into `AppIcon.appiconset` with updated `Contents.json`. Build verified ✅ with zero warnings.
+
+### ✅ Added: UDS MCP Transport (2026-02-20)
+
+Added Unix Domain Socket as an alternative MCP transport. `NIOUDSServer` + `UDSChannelHandler` (newline-delimited JSON, stdio MCP protocol). `MCPTransportType` picker in Settings. Bypassed `tools/list` and `notifications/initialized` from Main Actor for reliability. Verified socket at App Sandbox path.
 
 ---
 
 ## 📋 Next Up (from Post-Beta Improvement Plan)
 
-1. App Icon (Gemini)
+1. ~~App Icon~~ ✅
 2. Global Search
 
 ---
@@ -76,6 +81,7 @@ Refactored `MCPServer` to use **Delegate Pattern** to resolve `EXC_BAD_ACCESS` m
 
 | Date       | Summary                                                                                                                                                                                                                                                                                                                          |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-20 | **MCP Unix Domain Socket Transport:** Added `NIOUDSServer.swift` + `UDSChannelHandler.swift` (stdio newline-JSON protocol). Added `MCPTransportType` enum + segmented picker in Settings. Fixed `tools/list` -32000 error by bypassing Main Actor for static responses. Verified with Python socket test. Build ✅               |
 | 2026-02-14 | **MCP Server Stability:** Fixed critical `EXC_BAD_ACCESS` crash by refactoring `MCPServer` to use Delegate pattern (avoiding closure capture issues). Implemented `initialize` bypass for instant connection. Expanded `MCPRouter` with full CRUD tools (12 total). Fixed port number formatting. Verified with `curl`. Build ✅ |
 | 2026-02-13 | **Task Refactoring:** Removed task-type system (TaskType enum + all type-specific fields/UI). Simplified tasks to basic checkbox items. 8 files modified, 1 deleted. Build ✅                                                                                                                                                    |
 | 2026-02-08 | **Markdown Enhancements:** Integrated MarkdownUI + Splash for syntax highlighting. Created `SplashCodeSyntaxHighlighter.swift`. Fixed Markdown preview padding using card container. Added table button. Increased Add Task form width. Build ✅                                                                                 |
