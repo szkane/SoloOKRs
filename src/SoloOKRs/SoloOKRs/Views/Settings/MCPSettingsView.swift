@@ -1,150 +1,188 @@
 // MCPSettingsView.swift
 // SoloOKRs
-//
-// Created by Claude on 2026-02-05.
 
 import SwiftUI
 
 struct MCPSettingsView: View {
     @Bindable var mcpServer = MCPServer.shared
     @AppStorage("mcpServerPort") private var savedPort = 5100
-    // savedPort handles port persistence
-    
+
     var body: some View {
         Form {
+            // MARK: Enable / Status
             Section {
                 Toggle("Enable MCP Server", isOn: $mcpServer.isEnabled)
             } header: {
                 Text("Server Status")
             } footer: {
-                HStack {
-                    if mcpServer.isRunning {
-                        Image(systemName: "circle.fill")
-                            .foregroundStyle(.green)
-                    } else {
-                        Image(systemName: "circle.fill")
-                            .foregroundStyle(.red)
-                    }
+                HStack(spacing: 4) {
+                    Image(systemName: "circle.fill")
+                        .foregroundStyle(mcpServer.isRunning ? .green : .red)
+                        .font(.caption2)
                     Text(mcpServer.statusText)
+                        .font(.caption)
                 }
             }
-            
-            Section("Configuration") {
-                TextField("Port", value: $savedPort, formatter: portFormatter)
-                    .onChange(of: savedPort) { oldValue, newValue in
-                        let wasRunning = mcpServer.isRunning
-                        if wasRunning {
-                            mcpServer.stop()
-                        }
-                        
-                        mcpServer.port = newValue
-                        
-                        // Restart if enabled (which it was if wasRunning is true, mostly)
-                        if wasRunning {
-                            Task {
-                                await mcpServer.start()
-                            }
-                        }
+
+            // MARK: Transport Picker
+            Section("Transport") {
+                Picker("Mode", selection: $mcpServer.transportType) {
+                    ForEach(MCPTransportType.allCases) { type in
+                        Text(type.displayName).tag(type)
                     }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: mcpServer.transportType) { _, _ in
+                    guard mcpServer.isRunning else { return }
+                    mcpServer.stop()
+                    Task { await mcpServer.start() }
+                }
             }
-            
-            Section("How It Works") {
+
+            // MARK: Mode-specific Configuration
+            switch mcpServer.transportType {
+            case .http:
+                httpConfigSection
+            case .unixSocket:
+                udsConfigSection
+            }
+
+            // MARK: Tools Reference
+            Section("Available Tools (12)") {
                 VStack(alignment: .leading, spacing: 12) {
-                    Label("MCP (Model Context Protocol) lets AI assistants like Claude directly read and manage your OKRs.", systemImage: "info.circle")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    
-                    Divider()
-                    
-                    Text("Endpoint")
-                        .font(.caption.bold())
-                    HStack {
-                        Text("http://localhost:\(savedPort)/mcp")
-                            .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
-                        Spacer()
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString("http://localhost:\(savedPort)/mcp", forType: .string)
-                        } label: {
-                            Image(systemName: "doc.on.doc")
-                                .font(.caption)
-                        }
-                        .buttonStyle(.borderless)
-                        .help("Copy URL")
-                    }
-                    .padding(8)
-                    .background(.quaternary.opacity(0.5))
-                    .cornerRadius(6)
-                    
-                    Divider()
-                    
-                    Text("Available Tools (12)")
-                        .font(.caption.bold())
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        toolGroup("Objectives", tools: [
-                            ("list.bullet", "list_objectives", "List all objectives"),
-                            ("plus.circle", "create_objective", "Create new objective"),
-                            ("pencil.circle", "update_objective", "Update objective fields"),
-                            ("archivebox", "delete_objective", "Archive an objective"),
-                        ])
-                        
-                        toolGroup("Key Results", tools: [
-                            ("list.bullet", "list_key_results", "List KRs for objective"),
-                            ("plus.circle", "create_key_result", "Create key result"),
-                            ("pencil.circle", "update_key_result", "Update KR fields"),
-                            ("trash", "delete_key_result", "Delete key result"),
-                        ])
-                        
-                        toolGroup("Tasks", tools: [
-                            ("list.bullet", "list_tasks", "List tasks for KR"),
-                            ("plus.circle", "create_task", "Create task"),
-                            ("pencil.circle", "update_task", "Update task fields"),
-                            ("trash", "delete_task", "Delete task"),
-                        ])
-                    }
-                    
-                    Divider()
-                    
-                    Text("Claude Desktop Config")
-                        .font(.caption.bold())
-                    Text("Add this to your claude_desktop_config.json:")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text("""
-                    {
-                      "mcpServers": {
-                        "solo-okrs": {
-                          "url": "http://localhost:\(savedPort)/mcp"
-                        }
-                      }
-                    }
-                    """)
-                        .font(.system(.caption2, design: .monospaced))
-                        .textSelection(.enabled)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.quaternary.opacity(0.5))
-                        .cornerRadius(6)
-                    
-                    Link("Learn More about MCP", destination: URL(string: "https://modelcontextprotocol.io")!)
-                        .font(.caption)
+                    toolGroup("Objectives", tools: [
+                        ("list.bullet", "list_objectives", "List all objectives"),
+                        ("plus.circle", "create_objective", "Create new objective"),
+                        ("pencil.circle", "update_objective", "Update objective fields"),
+                        ("archivebox", "delete_objective", "Archive an objective"),
+                    ])
+                    toolGroup("Key Results", tools: [
+                        ("list.bullet", "list_key_results", "List KRs for objective"),
+                        ("plus.circle", "create_key_result", "Create key result"),
+                        ("pencil.circle", "update_key_result", "Update KR fields"),
+                        ("trash", "delete_key_result", "Delete key result"),
+                    ])
+                    toolGroup("Tasks", tools: [
+                        ("list.bullet", "list_tasks", "List tasks for KR"),
+                        ("plus.circle", "create_task", "Create task"),
+                        ("pencil.circle", "update_task", "Update task fields"),
+                        ("trash", "delete_task", "Delete task"),
+                    ])
                 }
             }
         }
         .formStyle(.grouped)
         .padding()
     }
-    
-    /// Number formatter without grouping separator (avoids "5,100")
+
+    // MARK: - HTTP Section
+
+    private var httpConfigSection: some View {
+        Section("HTTP Configuration") {
+            TextField("Port", value: $savedPort, formatter: portFormatter)
+                .onChange(of: savedPort) { _, newValue in
+                    let wasRunning = mcpServer.isRunning
+                    if wasRunning { mcpServer.stop() }
+                    mcpServer.port = newValue
+                    if wasRunning { Task { await mcpServer.start() } }
+                }
+
+            Label("MCP (Model Context Protocol) lets AI assistants like Claude directly read and manage your OKRs.", systemImage: "info.circle")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            endpointRow(
+                label: "Endpoint",
+                value: "http://localhost:\(savedPort)/mcp"
+            )
+
+            configSnippet("""
+            {
+              "mcpServers": {
+                "solo-okrs": {
+                  "url": "http://localhost:\(savedPort)/mcp"
+                }
+              }
+            }
+            """, caption: "Claude Desktop Config")
+        }
+    }
+
+    // MARK: - UDS Section
+
+    private var udsConfigSection: some View {
+        Section("Unix Socket Configuration") {
+            Label("Unix Domain Socket transport provides lower latency than HTTP. Ideal for local tools like Claude Code.", systemImage: "info.circle")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            endpointRow(
+                label: "Socket Path",
+                value: mcpServer.socketPath
+            )
+
+            configSnippet("""
+            {
+              "mcpServers": {
+                "solo-okrs": {
+                  "command": "nc",
+                  "args": ["-U", "\(mcpServer.socketPath)"]
+                }
+              }
+            }
+            """,
+            caption: "Claude Desktop Config (stdio via netcat)")
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func endpointRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption.bold())
+            HStack {
+                Text(value)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                Spacer()
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(value, forType: .string)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+                .help("Copy")
+            }
+            .padding(8)
+            .background(.quaternary.opacity(0.5))
+            .cornerRadius(6)
+        }
+    }
+
+    private func configSnippet(_ text: String, caption: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(caption)
+                .font(.caption.bold())
+            Text(text)
+                .font(.system(.caption2, design: .monospaced))
+                .textSelection(.enabled)
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.quaternary.opacity(0.5))
+                .cornerRadius(6)
+        }
+    }
+
     private var portFormatter: NumberFormatter {
         let f = NumberFormatter()
         f.numberStyle = .none
         f.usesGroupingSeparator = false
         return f
     }
-    
+
     @ViewBuilder
     private func toolGroup(_ title: String, tools: [(icon: String, name: String, desc: String)]) -> some View {
         VStack(alignment: .leading, spacing: 2) {

@@ -96,12 +96,22 @@ final class HTTPRequestHandler: ChannelInboundHandler, @unchecked Sendable {
                 // Write response back on the event loop
                 channel.eventLoop.execute {
                     guard channel.isActive else { return }
-                    self.sendResponseOnChannel(
-                        channel: channel,
-                        status: .ok,
-                        contentType: "application/json",
-                        body: responseString
-                    )
+                    if responseData.isEmpty {
+                        // Notification — no body expected (e.g. notifications/initialized)
+                        self.sendResponseOnChannel(
+                            channel: channel,
+                            status: .noContent,
+                            contentType: "application/json",
+                            body: ""
+                        )
+                    } else {
+                        self.sendResponseOnChannel(
+                            channel: channel,
+                            status: .ok,
+                            contentType: "application/json",
+                            body: responseString
+                        )
+                    }
                 }
             } catch {
                 channel.eventLoop.execute {

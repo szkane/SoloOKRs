@@ -1,11 +1,29 @@
 // MCPServer.swift
 // SoloOKRs
 //
-// MCP server manager using SwiftNIO
+// MCP server manager using SwiftNIO — supports HTTP and Unix Domain Socket transports
 
 import Foundation
 import SwiftData
 import SwiftUI
+
+// MARK: - Transport Type
+
+enum MCPTransportType: String, CaseIterable, Identifiable {
+    case http = "http"
+    case unixSocket = "unixSocket"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .http: return "HTTP"
+        case .unixSocket: return "Unix Socket"
+        }
+    }
+}
+
+// MARK: - MCPServer
 
 @Observable
 @MainActor
@@ -14,7 +32,8 @@ class MCPServer {
 
     var isRunning = false
     var port: Int = 5100
-    
+    var transportType: MCPTransportType = .http
+
     var isEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(isEnabled, forKey: "mcpServerEnabled")
@@ -25,130 +44,197 @@ class MCPServer {
             }
         }
     }
-    
-    private var server: NIOHTTPServer?
+
+    // Servers — only one active at a time
+    private var httpServer: NIOHTTPServer?
+    private var udsServer: NIOUDSServer?
     private var router: MCPRouter?
-    
+
     // Status tracking
     var lastError: String?
-    
+
+    /// Default socket path under Application Support
+    static var defaultSocketPath: String {
+        let appSupport = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first!
+            .appendingPathComponent("SoloOKRs")
+        try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+        return appSupport.appendingPathComponent("mcp.sock").path
+    }
+
+    var socketPath: String = MCPServer.defaultSocketPath
+
     private init() {
-        // Load saved state without triggering didSet
         let savedEnabled = UserDefaults.standard.bool(forKey: "mcpServerEnabled")
-        
         let savedPort = UserDefaults.standard.integer(forKey: "mcpServerPort")
-        if savedPort > 0 {
-            self.port = savedPort
+        if savedPort > 0 { self.port = savedPort }
+
+        if let savedTransport = UserDefaults.standard.string(forKey: "mcpTransportType"),
+           let t = MCPTransportType(rawValue: savedTransport) {
+            self.transportType = t
         }
-        
-        // Just restore the toggle state — don't start yet (router not configured)
+
+        // Restore toggle state — don't start yet (router not configured)
         self.isEnabled = savedEnabled
     }
-    
-    /// Configure the server with the ModelContext for data access.
-    /// Must be called before the server can start (typically in onAppear).
+
+    /// Configure the server with ModelContext. Must be called before starting.
     func configure(modelContext: ModelContext) {
         self.router = MCPRouter(modelContext: modelContext)
-        
-        // Auto-start if the toggle was saved as enabled
         if isEnabled {
-            Task { @MainActor in
-                await start()
-            }
+            Task { @MainActor in await start() }
         }
     }
 
-    // Delegate implementation to handle requests without closure capture issues
+    // MARK: - Delegate
+
     struct ServerDelegate: MCPDelegate {
         let router: MCPRouter
-        
+
         func handlePOST(bytes: [UInt8]) async throws -> Data {
-            // Convert [UInt8] back to Data for processing
             let data = Data(bytes)
-            
+
             do {
-                // Debug: log raw received data
                 print("MCP raw input bytes: \(bytes.count)")
-                
-                // Parse JSON-RPC request using JSONSerialization
+
                 guard let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let request = JSONRPCRequest(from: dict) else {
-                    let errorResponse: [String: Any] = [
-                        "jsonrpc": "2.0",
-                        "error": ["code": -32700, "message": "Invalid JSON-RPC request"],
-                        "id": NSNull()
-                    ]
-                    return try JSONSerialization.data(withJSONObject: errorResponse)
+                    return try errorResponse(code: -32700, message: "Invalid JSON-RPC request")
                 }
                 print("MCP request: \(request.method)")
-                
-                // Optimization: Handle initialize/initialized directly to avoid MainActor hop if possible
+
+                // Handle static methods directly — no MainActor hop needed
                 if request.method == "initialize" {
-                     let response: [String: Any] = [
+                    let result: [String: Any] = [
                         "jsonrpc": "2.0",
                         "id": request.id ?? NSNull(),
                         "result": [
                             "protocolVersion": "2024-11-05",
-                            "capabilities": [
-                                "tools": ["listChanged": true]
-                            ],
-                            "serverInfo": [
-                                "name": "SoloOKRs",
-                                "version": "1.0.0"
-                            ]
+                            "capabilities": ["tools": ["listChanged": true]],
+                            "serverInfo": ["name": "SoloOKRs", "version": "1.0.0"]
                         ]
                     ]
-                    return try JSONSerialization.data(withJSONObject: response)
+                    return try JSONSerialization.data(withJSONObject: result)
+
                 } else if request.method == "notifications/initialized" {
-                    // Just ack
-                     let response: [String: Any] = [
+                    // This is a notification — no response expected
+                    return Data()
+
+                } else if request.method == "tools/list" {
+                    // Static tool list — handle directly without Main Actor hop
+                    let result: [String: Any] = [
                         "jsonrpc": "2.0",
                         "id": request.id ?? NSNull(),
-                        "result": "ok"
+                        "result": ["tools": Self.staticToolDefinitions()]
                     ]
-                    return try JSONSerialization.data(withJSONObject: response)
+                    return try JSONSerialization.data(withJSONObject: result)
                 }
-                
+
                 let response = await router.handle(request: request)
                 return try JSONSerialization.data(withJSONObject: response)
             } catch {
                 print("MCP error: \(error)")
-                let hexString = data.map { String(format: "%02hhx", $0) }.joined()
-                let errorResponse: [String: Any] = [
-                    "jsonrpc": "2.0",
-                    "error": [
-                        "code": -32700,
-                        "message": "Parse error: \(error.localizedDescription). Build-ID: DELEGATE-FIX. Count: \(data.count). Hex: \(hexString)"
-                    ],
-                    "id": NSNull()
-                ]
-                return try JSONSerialization.data(withJSONObject: errorResponse)
+                return try errorResponse(code: -32700, message: "Parse error: \(error.localizedDescription)")
             }
         }
-        
+
         func handleSSE(send: @escaping @Sendable (String) -> Void) {
             // SSE not implemented yet
         }
+
+        private func errorResponse(code: Int, message: String) throws -> Data {
+            let resp: [String: Any] = [
+                "jsonrpc": "2.0",
+                "error": ["code": code, "message": message],
+                "id": NSNull()
+            ]
+            return try JSONSerialization.data(withJSONObject: resp)
+        }
+
+        // Static tool schema — mirrors MCPRouter.toolDefinitions()
+        static func staticToolDefinitions() -> [[String: Any]] {
+            func tool(_ name: String, _ desc: String, props: [String: [String: String]], required: [String]) -> [String: Any] {
+                ["name": name, "description": desc, "inputSchema": ["type": "object", "properties": props, "required": required] as [String: Any]]
+            }
+            return [
+                tool("list_objectives", "List all OKR objectives with status and progress.", props: [:], required: []),
+                tool("create_objective", "Create a new OKR objective (defaults to Draft status).",
+                     props: ["title": ["type": "string", "description": "Title of the objective"],
+                             "description": ["type": "string", "description": "Detailed description"]],
+                     required: ["title"]),
+                tool("update_objective", "Update an existing objective's fields.",
+                     props: ["id": ["type": "string", "description": "UUID of the objective"],
+                             "title": ["type": "string", "description": "New title"],
+                             "description": ["type": "string", "description": "New description"],
+                             "status": ["type": "string", "description": "New status: draft, active, review, achieved, archived"]],
+                     required: ["id"]),
+                tool("delete_objective", "Archive an objective (soft delete).",
+                     props: ["id": ["type": "string", "description": "UUID of the objective"]], required: ["id"]),
+                tool("list_key_results", "List key results for an objective.",
+                     props: ["objective_id": ["type": "string", "description": "UUID of the parent objective"]], required: ["objective_id"]),
+                tool("create_key_result", "Create a new key result under an objective.",
+                     props: ["objective_id": ["type": "string", "description": "UUID of the parent objective"],
+                             "title": ["type": "string", "description": "Title of the key result"]],
+                     required: ["objective_id", "title"]),
+                tool("update_key_result", "Update an existing key result.",
+                     props: ["id": ["type": "string", "description": "UUID of the key result"],
+                             "title": ["type": "string", "description": "New title"],
+                             "self_score": ["type": "integer", "description": "Self-assessment score 0-100"]],
+                     required: ["id"]),
+                tool("delete_key_result", "Delete a key result.",
+                     props: ["id": ["type": "string", "description": "UUID of the key result"]], required: ["id"]),
+                tool("list_tasks", "List tasks for a key result.",
+                     props: ["key_result_id": ["type": "string", "description": "UUID of the parent key result"]], required: ["key_result_id"]),
+                tool("create_task", "Create a new task under a key result.",
+                     props: ["key_result_id": ["type": "string", "description": "UUID of the parent key result"],
+                             "title": ["type": "string", "description": "Title of the task"],
+                             "description": ["type": "string", "description": "Task description (supports Markdown)"],
+                             "priority": ["type": "string", "description": "Priority: low, medium, high, urgent"]],
+                     required: ["key_result_id", "title"]),
+                tool("update_task", "Update an existing task.",
+                     props: ["id": ["type": "string", "description": "UUID of the task"],
+                             "title": ["type": "string", "description": "New title"],
+                             "description": ["type": "string", "description": "New description"],
+                             "is_completed": ["type": "boolean", "description": "Mark task as completed or not"],
+                             "priority": ["type": "string", "description": "Priority: low, medium, high, urgent"]],
+                     required: ["id"]),
+                tool("delete_task", "Delete a task.",
+                     props: ["id": ["type": "string", "description": "UUID of the task"]], required: ["id"]),
+            ]
+        }
     }
+
+    // MARK: - Start / Stop
 
     func start() async {
         guard !isRunning else { return }
         guard let router = router else {
             lastError = "ModelContext not configured"
-            return 
+            return
         }
 
-        // Use delegate pattern instead of closure
+        // Persist transport choice
+        UserDefaults.standard.set(transportType.rawValue, forKey: "mcpTransportType")
+
         let delegate = ServerDelegate(router: router)
-        
-        let newServer = NIOHTTPServer(port: port, delegate: delegate)
-        
+
         do {
-            try await newServer.start()
-            self.server = newServer
+            switch transportType {
+            case .http:
+                let server = NIOHTTPServer(port: port, delegate: delegate)
+                try await server.start()
+                self.httpServer = server
+
+            case .unixSocket:
+                let server = NIOUDSServer(socketPath: socketPath, delegate: delegate)
+                try await server.start()
+                self.udsServer = server
+            }
+
             self.isRunning = true
             self.lastError = nil
-            print("MCPServer started on port \(port)")
+            print("MCPServer started (\(transportType.displayName))")
         } catch {
             self.lastError = error.localizedDescription
             print("MCPServer failed to start: \(error)")
@@ -158,15 +244,26 @@ class MCPServer {
     func stop() {
         guard isRunning else { return }
 
-        server?.stop()
-        server = nil
+        httpServer?.stop()
+        httpServer = nil
+
+        udsServer?.stop()
+        udsServer = nil
+
         isRunning = false
         print("MCPServer stopped")
     }
 
+    // MARK: - Status
+
     var statusText: String {
         if isRunning {
-            return "Running on localhost:\(port)"
+            switch transportType {
+            case .http:
+                return "Running on localhost:\(port)"
+            case .unixSocket:
+                return "Running on \(socketPath)"
+            }
         } else if let error = lastError {
             return "Error: \(error)"
         } else {
