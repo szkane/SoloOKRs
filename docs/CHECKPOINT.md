@@ -1,6 +1,6 @@
-> **Last Session:** 2026-02-20 23:25
+> **Last Session:** 2026-03-04 14:18
 > **Current Phase:** Post-Beta Improvements + User Feedback 🛠️  
-> **Build Status:** ✅ (verified 2026-02-20 23:25)
+> **Build Status:** ✅ (verified 2026-03-04 14:18)
 
 ---
 
@@ -74,6 +74,7 @@ None.
 
 | Date       | Summary                                                                                                                                                                                                                                                                                                                          |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-04 | **Workflows & Skills:** Cleaned up `.agent` folder structure, symlinked 5 advanced skills (superpowers, debugging, code review, branch finishing), and embedded them into `/init` and `/sync` workflows. Build ✅                                                                                                                |
 | 2026-02-20 | **Bug Fix:** Fixed in-app language switcher by injecting `preferredLanguage` AppStorage value into `\.locale` environment at `SoloOKRsApp` root level. Added missing languages to Settings Picker. Build ✅                                                                                                                      |
 | 2026-02-20 | **Multilingual Support:** Added 8 new languages (zh-Hans, zh-Hant, ja, ko, de, fr, es, pt-BR) to `Localizable.xcstrings` and updated Xcode `knownRegions`. Compiled 1536 translated strings. Build ✅                                                                                                                            |
 | 2026-02-20 | **MCP Unix Domain Socket Transport:** Added `NIOUDSServer.swift` + `UDSChannelHandler.swift` (stdio newline-JSON protocol). Added `MCPTransportType` enum + segmented picker in Settings. Fixed `tools/list` -32000 error by bypassing Main Actor for static responses. Verified with Python socket test. Build ✅               |
