@@ -2,6 +2,9 @@
 // SoloOKRs
 //
 // Custom syntax highlighter using Splash for MarkdownUI
+//
+// Updated to fix deprecated Text + operator warning (macOS 26.0) by using 
+// modern Text composition patterns instead of deprecated concatenation.
 
 import MarkdownUI
 import Splash
@@ -37,32 +40,31 @@ struct TextOutputFormat: OutputFormat {
 extension TextOutputFormat {
     struct Builder: OutputBuilder {
         let theme: Splash.Theme
-        private var accumulatedText: [Text] = []
+        private var segments: [(String, SwiftUI.Color)] = []
         
         init(theme: Splash.Theme) {
             self.theme = theme
-            self.accumulatedText = []
+            self.segments = []
         }
         
         mutating func addToken(_ token: String, ofType type: TokenType) {
             let color = color(for: type)
-            accumulatedText.append(Text(token).foregroundColor(color))
+            segments.append((token, color))
         }
         
         mutating func addPlainText(_ text: String) {
-            accumulatedText.append(Text(text))
+            segments.append((text, .primary))
         }
         
         mutating func addWhitespace(_ whitespace: String) {
-            accumulatedText.append(Text(whitespace))
+            segments.append((whitespace, .primary))
         }
         
         func build() -> Text {
-            var result = Text("")
-            for part in accumulatedText {
-                result = result + part
+            segments.reduce(Text("")) { result, segment in
+                // Use string interpolation instead of + operator to avoid deprecation warning
+                Text("\(result)\(Text(segment.0).foregroundColor(segment.1))")
             }
-            return result
         }
         
         private func color(for tokenType: TokenType) -> SwiftUI.Color {
