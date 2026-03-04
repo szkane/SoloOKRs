@@ -6,7 +6,8 @@ description: Sync session progress to CHECKPOINT.md before ending
 
 Before ending a session, update `docs/CHECKPOINT.md`:
 
-1. **Ensure Clean State** - Commit any pending code changes:
+1. **Code Review and Integration** - If you have completed a task or implemented a feature, invoke the `requesting-code-review` and `receiving-code-review` skills. Then, use the `finishing-a-development-branch` skill to determine how to integrate the work appropriately.
+2. **Ensure Clean State** - Commit any pending code changes:
 
    ```bash
    git add . && git commit -m "chore: save progress before sync"
@@ -14,7 +15,7 @@ Before ending a session, update `docs/CHECKPOINT.md`:
 
    _(Skip if nothing to commit)_
 
-2. **Verify Build & Log Errors** - Run build and capture output:
+3. **Verify Build & Log Errors** - Run build and capture output:
 
    ```bash
    cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build
@@ -23,14 +24,14 @@ Before ending a session, update `docs/CHECKPOINT.md`:
    - If **Build Succeeded** (✅): Proceed.
    - If **Build Failed** (❌): **CRITICAL:** Copy the specific error message(s) (e.g., "Generic type 'Task' has no arguments") and include it in the Session Notes.
 
-3. **Update timestamp** - Set "Last Session" to current date/time
-4. **Move completed items** - Transfer done items from "Active Work" to "Completed"
-5. **Update "Current Phase"** - If work focus changed
-6. **Add Session Note** - Append row to table:
+4. **Update timestamp** - Set "Last Session" to current date/time
+5. **Move completed items** - Transfer done items from "Active Work" to "Completed"
+6. **Update "Current Phase"** - If work focus changed
+7. **Add Session Note** - Append row to table:
    - Date
    - Brief summary (include FAILURE DETAILS if build failed)
-7. **Update Build Status** - ✅ or ❌ based on build result
-8. **Commit Sync Changes:**
+8. **Update Build Status** - ✅ or ❌ based on build result
+9. **Commit Sync Changes:**
    ```bash
    git add docs/CHECKPOINT.md && git commit -m "docs: sync session progress"
    ```
