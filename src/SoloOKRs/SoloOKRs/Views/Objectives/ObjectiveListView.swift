@@ -2,9 +2,11 @@
 // SoloOKRs
 //
 // Created by Claude on 2026-02-04.
+// Updated 2026-03-05: Magnifying glass button for analyze, MarkdownUI analysis sheet.
 
 import SwiftUI
 import SwiftData
+import MarkdownUI
 
 struct ObjectiveListView: View {
     @Environment(\.modelContext) private var modelContext
@@ -20,6 +22,9 @@ struct ObjectiveListView: View {
     @State private var analysisResult: String?
     @State private var isAnalyzing = false
     @State private var showingAnalysisSheet = false
+    @State private var selectedObjectiveForAnalysis: Objective?
+    @State private var showingReviewSheet: Objective?
+    @State private var showingReviewHistory: Objective?
     
     enum ObjectiveTab: String, CaseIterable {
         case draft = "Draft"
@@ -33,7 +38,6 @@ struct ObjectiveListView: View {
         case .draft:
             return objectives.filter { $0.status == .draft }
         case .active:
-            // Review mode objectives also show in Active tab as per user request
             return objectives.filter { $0.status == .active || $0.status == .review }
         case .achieved:
             return objectives.filter { $0.status == .achieved }
@@ -66,36 +70,28 @@ struct ObjectiveListView: View {
             
             List(selection: $selectedObjective) {
                 ForEach(filteredObjectives) { objective in
-                    ObjectiveRowView(objective: objective, selectedObjective: $selectedObjective, onPublish: {
-                        Task { await analyzeObjective(objective) }
-                    })
-                        .tag(objective)
-                        .contextMenu {
-                            contextMenuContent(for: objective)
+                    ObjectiveRowView(
+                        objective: objective,
+                        selectedObjective: $selectedObjective,
+                        onAnalyze: {
+                            Task { await analyzeObjective(objective) }
                         }
+                    )
+                    .tag(objective)
+                    .contextMenu {
+                        contextMenuContent(for: objective)
+                    }
                 }
             }
             .animation(.spring(duration: 0.3), value: filteredObjectives.count)
         }
         .navigationTitle("Objectives")
 
-        // Task 2: Review Mode Button Location - moved to bottom safe area
+        // Bottom bar: Add Objective only
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
                 Divider()
                 HStack {
-                    Button {
-                        if ReviewModeManager.shared.isInReviewMode {
-                            ReviewModeManager.shared.exitReviewMode()
-                        } else {
-                            ReviewModeManager.shared.enterReviewMode()
-                        }
-                    } label: {
-                        Label(ReviewModeManager.shared.isInReviewMode ? "Exit Review" : "Review Mode", systemImage: ReviewModeManager.shared.isInReviewMode ? "pencil.circle.fill" : "pencil.circle")
-                            .font(.headline)
-                    }
-                    .tint(ReviewModeManager.shared.isInReviewMode ? .orange : .accentColor)
-                    
                     Spacer()
                     
                     Button {
@@ -137,8 +133,9 @@ struct ObjectiveListView: View {
                         }
                         
                         if let result = analysisResult {
-                            Text(LocalizedStringKey(result))
+                            Markdown(result)
                                 .textSelection(.enabled)
+                                .markdownTheme(.gitHub)
                         } else {
                             ContentUnavailableView("No Analysis", systemImage: "text.magnifyingglass", description: Text("Run analysis to see feedback."))
                         }
@@ -152,19 +149,18 @@ struct ObjectiveListView: View {
                     }
                 }
             }
-            .frame(minWidth: 400, minHeight: 400)
+            .frame(minWidth: 500, minHeight: 500)
         }
         .onChange(of: selectedObjective) { _, _ in
             selectedKeyResult = nil
         }
-        .onChange(of: ReviewModeManager.shared.isInReviewMode) { _, isInReviewMode in
-            if isInReviewMode {
-                selectedTab = .active
-            }
+        .sheet(item: $showingReviewSheet) { obj in
+            CreateReviewView(objective: obj)
+        }
+        .sheet(item: $showingReviewHistory) { obj in
+            ReviewHistoryView(objective: obj)
         }
     }
-    
-    @State private var selectedObjectiveForAnalysis: Objective?
 
     @ViewBuilder
     private func contextMenuContent(for objective: Objective) -> some View {
@@ -181,6 +177,25 @@ struct ObjectiveListView: View {
                 promoteToActive(objective)
             } label: {
                 Label("Publish to Active", systemImage: "arrow.up.circle")
+            }
+        }
+        
+        Divider()
+        
+        // Review actions (for active objectives)
+        if objective.status == .active || objective.status == .review {
+            Button {
+                showingReviewSheet = objective
+            } label: {
+                Label("New Review", systemImage: "calendar.badge.plus")
+            }
+        }
+        
+        if !objective.reviews.isEmpty {
+            Button {
+                showingReviewHistory = objective
+            } label: {
+                Label("Review History (\(objective.reviews.count))", systemImage: "calendar.badge.clock")
             }
         }
         
@@ -207,7 +222,7 @@ struct ObjectiveListView: View {
             analysisResult = result
             showingAnalysisSheet = true
         } catch {
-            analysisResult = "### Analysis Failed\n\n**Error details:** \(error.localizedDescription)\n\nPlease checks your AI Settings and ensure the selected provider/model is available."
+            analysisResult = "### Analysis Failed\n\n**Error details:** \(error.localizedDescription)\n\nPlease check your AI Settings and ensure the selected provider/model is available."
             showingAnalysisSheet = true
         }
         isAnalyzing = false
@@ -236,7 +251,7 @@ struct ObjectiveListView: View {
 struct ObjectiveRowView: View {
     let objective: Objective
     @Binding var selectedObjective: Objective?
-    var onPublish: (() -> Void)? = nil
+    var onAnalyze: (() -> Void)? = nil
     
     @State private var isOverduePulsing = false
     @State private var showingEditSheet = false
@@ -245,24 +260,34 @@ struct ObjectiveRowView: View {
         ReviewModeManager.shared.canEditOKR(status: objective.status)
     }
     
+    private var isSelected: Bool {
+        selectedObjective?.id == objective.id
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-             // ... (Keep content identical, just wrapper changes)
             HStack {
                 Text(objective.title)
                     .font(.headline)
                 
                 Spacer()
                 
-                if objective.status == .draft, let onPublish = onPublish {
+                // Magnifying glass button for draft objectives (analyze)
+                if objective.status == .draft, let onAnalyze = onAnalyze {
                     Button {
-                        onPublish()
+                        onAnalyze()
                     } label: {
-                        Image(systemName: "arrow.up.circle")
-                            .foregroundStyle(.blue)
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(isSelected ? .white.opacity(0.8) : .blue)
+                            .padding(4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .fill(isSelected ? .white.opacity(0.2) : Color.blue.opacity(0.1))
+                            )
                     }
                     .buttonStyle(.plain)
-                    .help("Analyze and Publish")
+                    .help("Analyze with AI")
                 }
                 
                 if ReviewModeManager.shared.isInReviewMode && (objective.status == .active || objective.status == .review) {
@@ -317,15 +342,11 @@ struct ObjectiveRowView: View {
                     Label("Edit Objective", systemImage: "pencil")
                 }
             }
-            // Add other context actions here if needed (Archive/Delete handled in parent list context menu normally, 
-            // but can duplicate here if Row captures all events)
         }
         .sheet(isPresented: $showingEditSheet) {
             EditObjectiveView(objective: objective)
         }
     }
-    
-
 }
 
 #Preview {

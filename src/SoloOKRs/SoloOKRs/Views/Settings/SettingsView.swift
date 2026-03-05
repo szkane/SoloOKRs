@@ -18,6 +18,11 @@ struct SettingsView: View {
                     Label("AI", systemImage: "brain")
                 }
 
+            PromptSettingsView()
+                .tabItem {
+                    Label("Prompts", systemImage: "text.bubble")
+                }
+
             MCPSettingsView()
                 .tabItem {
                     Label("MCP", systemImage: "network")
@@ -31,11 +36,6 @@ struct SettingsView: View {
             SubscriptionSettingsView()
                 .tabItem {
                     Label("Subscription", systemImage: "creditcard")
-                }
-
-            ReviewSettingsView()
-                .tabItem {
-                    Label("Review", systemImage: "calendar.badge.clock")
                 }
         }
         .frame(minWidth: 600, idealWidth: 700, minHeight: 450, idealHeight: 550)

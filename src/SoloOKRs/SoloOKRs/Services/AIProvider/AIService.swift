@@ -2,6 +2,7 @@
 // SoloOKRs
 //
 // Created by Claude on 2026-02-05.
+// Refactored 2026-03-05: Uses PromptManager for all prompts.
 
 import Foundation
 import SwiftUI
@@ -96,7 +97,6 @@ class AIService {
     }
 
     var isConfigured: Bool {
-        // Check if current provider has API key
         switch selectedProviderType {
         case .gemini: return !geminiAPIKey.isEmpty
         case .openai: return !openAIAPIKey.isEmpty
@@ -129,12 +129,11 @@ class AIService {
         }
     }
 
-    // MARK: - API Calls
+    // MARK: - Fetch Models
 
     var availableModels: [String] = []
 
     func fetchModels() async throws {
-        // isConfigured handles provider-specific checks (e.g. true for Ollama even without key)
         guard isConfigured else {
             throw AIError.notConfigured
         }
@@ -144,12 +143,10 @@ class AIService {
         
         switch selectedProviderType {
         case .gemini:
-             // Gemini API list models
              let urlString = "https://generativelanguage.googleapis.com/v1beta/models?key=\(geminiAPIKey)"
              guard let url = URL(string: urlString) else { throw AIError.apiError("Invalid URL") }
              let (data, _) = try await URLSession.shared.data(from: url)
              let response = try JSONDecoder().decode(GeminiModelListResponse.self, from: data)
-             // Filter for generateContent supported models
              let fetchedModels = response.models
                  .filter { $0.supportedGenerationMethods.contains("generateContent") }
                  .map { $0.name.replacingOccurrences(of: "models/", with: "") }
@@ -167,9 +164,6 @@ class AIService {
              self.availableModels = response.data.map { $0.id }.sorted()
 
         case .anthropic:
-             // Anthropic models are typically static or fetched via similar API if available. 
-             // Currently best to provide a standard list if API is experimental.
-             // But let's try a standard list as fallback or minimal implementation
              self.availableModels = ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1"]
              
         case .ollama:
@@ -193,7 +187,7 @@ class AIService {
                  self.availableModels = decodedResponse.models.map { $0.name }.sorted()
              } catch {
                  print("Ollama Fetch Error: \(error)")
-                 throw error // Re-throw to be caught by UI
+                 throw error
              }
              
         case .lmstudio:
@@ -204,7 +198,7 @@ class AIService {
                  request.addValue("Bearer \(lmStudioAPIKey)", forHTTPHeaderField: "Authorization")
              }
              let (data, _) = try await URLSession.shared.data(for: request)
-             let response = try JSONDecoder().decode(OpenAIModelListResponse.self, from: data) // LM Studio mimics OpenAI
+             let response = try JSONDecoder().decode(OpenAIModelListResponse.self, from: data)
              self.availableModels = response.data.map { $0.id }.sorted()
              
         case .custom:
@@ -228,108 +222,74 @@ class AIService {
         }
     }
 
-    // MARK: - API Calls
+    // MARK: - Unified API Calls (using PromptManager)
 
     func analyzeOKR(_ objective: Objective) async throws -> String {
-        guard isConfigured else {
-            throw AIError.notConfigured
-        }
-
-        isProcessing = true
-        defer { isProcessing = false }
-
-        switch selectedProviderType {
-        case .gemini:
-            return try await analyzeWithGemini(objective)
-        case .ollama:
-            return try await analyzeWithOllama(objective)
-        case .anthropic:
-             return try await analyzeWithAnthropic(objective)
-        case .openai, .lmstudio, .custom:
-             return try await analyzeWithOpenAICompatible(objective)
-        }
-    }
-    
-    private func analyzeWithOllama(_ objective: Objective) async throws -> String {
-        let prompt = """
-        Analyze the following OKR Objective for quality, clarity, and measurability.
-        Provide constructive feedback on strengths and specific suggestions for improvement.
-        
-        Objective Title: "\(objective.title)"
-        Description: "\(objective.objectiveDescription)"
-        Status: \(objective.status.displayName)
-        
-        Format the response with Markdown using headers and bullet points.
-        """
-        return try await generateWithOllama(prompt: prompt)
+        let prompt = PromptManager.shared.resolvedAnalyzePrompt(for: objective)
+        return try await generate(prompt: prompt)
     }
 
     func suggestKeyResults(for objective: Objective) async throws -> [String] {
-        guard isConfigured else {
-            throw AIError.notConfigured
-        }
-
-        isProcessing = true
-        defer { isProcessing = false }
-
-        switch selectedProviderType {
-        case .gemini:
-            return try await suggestKeyResultsWithGemini(objective)
-        case .ollama:
-            return try await suggestKeyResultsWithOllama(objective)
-        case .anthropic:
-            return try await suggestKeyResultsWithAnthropic(objective)
-        case .openai, .lmstudio, .custom:
-            return try await suggestKeyResultsWithOpenAICompatible(objective)
-        }
-    }
-
-    private func suggestKeyResultsWithOllama(_ objective: Objective) async throws -> [String] {
-        let prompt = """
-        Suggest 3-5 Key Results (measurable outcomes) for the following Objective.
-        Return ONLY a JSON array of strings, with no other text or markdown formatting.
-        
-        Objective: "\(objective.title)"
-        Context: "\(objective.objectiveDescription)"
-        """
-        let text = try await generateWithOllama(prompt: prompt)
+        let prompt = PromptManager.shared.resolvedSuggestKRPrompt(for: objective)
+        let text = try await generate(prompt: prompt)
         return parseJSONList(from: text)
     }
 
     func suggestTasks(for keyResult: KeyResult) async throws -> [String] {
+        let prompt = PromptManager.shared.resolvedSuggestTaskPrompt(for: keyResult)
+        let text = try await generate(prompt: prompt)
+        return parseJSONList(from: text)
+    }
+
+    func evaluateKeyResult(krTitle: String, objectiveTitle: String) async throws -> String {
+        let prompt = PromptManager.shared.resolvedEvaluateKRPrompt(objectiveTitle: objectiveTitle, krTitle: krTitle)
+        return try await generate(prompt: prompt)
+    }
+    
+    // MARK: - Unified Generate (routes to correct provider)
+    
+    private func generate(prompt: String) async throws -> String {
         guard isConfigured else {
             throw AIError.notConfigured
         }
-
+        
         isProcessing = true
         defer { isProcessing = false }
-
+        
         switch selectedProviderType {
         case .gemini:
-            return try await suggestTasksWithGemini(keyResult)
+            return try await generateWithGemini(prompt: prompt)
         case .ollama:
-            return try await suggestTasksWithOllama(keyResult)
-        default:
-             try await Task.sleep(for: .seconds(1))
-             return ["Task 1", "Task 2"]
+            return try await generateWithOllama(prompt: prompt)
+        case .anthropic:
+            return try await generateWithAnthropic(prompt: prompt)
+        case .openai, .lmstudio, .custom:
+            return try await generateWithOpenAICompatible(prompt: prompt)
         }
     }
 
-    private func suggestTasksWithOllama(_ keyResult: KeyResult) async throws -> [String] {
-         let prompt = """
-         Suggest 3-5 concrete tasks/actions to help achieve this Key Result.
-         Return ONLY a JSON array of strings, with no other text or markdown formatting.
-         
-         Key Result: "\(keyResult.title)"
-         """
-        let text = try await generateWithOllama(prompt: prompt)
-        return parseJSONList(from: text)
-    }
+    // MARK: - JSON Parsing
     
+    private func parseJSONList(from text: String) -> [String] {
+        let cleanText = text.replacingOccurrences(of: "```json", with: "")
+                            .replacingOccurrences(of: "```", with: "")
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if let data = cleanText.data(using: .utf8),
+           let suggestions = try? JSONDecoder().decode([String].self, from: data) {
+            return suggestions
+        }
+        
+        // Fallback: split by newlines if JSON parsing fails
+        return cleanText.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && ($0.starts(with: "-") || $0.first?.isNumber == true) }
+            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-1234567890. ")) }
+    }
+
     // MARK: - Gemini REST API Implementation
     
-    private func generateContent(prompt: String) async throws -> String {
-        // Use selected model, default to 1.5-flash if somehow empty
+    private func generateWithGemini(prompt: String) async throws -> String {
         let model = geminiModel.isEmpty ? "gemini-1.5-flash" : geminiModel
         let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(geminiAPIKey)"
         guard let url = URL(string: urlString) else {
@@ -355,7 +315,6 @@ class AIService {
         }
         
         guard httpResponse.statusCode == 200 else {
-            // Try to parse error message
             if let errorResponse = try? JSONDecoder().decode(GeminiErrorResponse.self, from: data) {
                 throw AIError.apiError(errorResponse.error.message)
             }
@@ -370,69 +329,11 @@ class AIService {
         
         return text
     }
-    
-    private func analyzeWithGemini(_ objective: Objective) async throws -> String {
-        let prompt = """
-        Analyze the following OKR Objective for quality, clarity, and measurability.
-        Provide constructive feedback on strengths and specific suggestions for improvement.
-        
-        Objective Title: "\(objective.title)"
-        Description: "\(objective.objectiveDescription)"
-        Status: \(objective.status.displayName)
-        
-        Format the response with Markdown using headers and bullet points.
-        """
-        
-        return try await generateContent(prompt: prompt)
-    }
-    
-    private func suggestKeyResultsWithGemini(_ objective: Objective) async throws -> [String] {
-        let prompt = """
-        Suggest 3-5 Key Results (measurable outcomes) for the following Objective.
-        Return ONLY a JSON array of strings, with no other text or markdown formatting.
-        
-        Objective: "\(objective.title)"
-        Context: "\(objective.objectiveDescription)"
-        """
-        
-        let text = try await generateContent(prompt: prompt)
-        return parseJSONList(from: text)
-    }
-    
-    private func suggestTasksWithGemini(_ keyResult: KeyResult) async throws -> [String] {
-         let prompt = """
-         Suggest 3-5 concrete tasks/actions to help achieve this Key Result.
-         Return ONLY a JSON array of strings, with no other text or markdown formatting.
-         
-         Key Result: "\(keyResult.title)"
-         """
-         
-        let text = try await generateContent(prompt: prompt)
-        return parseJSONList(from: text)
-    }
-    
-    private func parseJSONList(from text: String) -> [String] {
-        // Basic cleaning to handle potential markdown code blocks
-        let cleanText = text.replacingOccurrences(of: "```json", with: "")
-                            .replacingOccurrences(of: "```", with: "")
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if let data = cleanText.data(using: .utf8),
-           let suggestions = try? JSONDecoder().decode([String].self, from: data) {
-            return suggestions
-        }
-        
-        // Fallback: split by newlines if JSON parsing fails
-        return cleanText.components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty && ($0.starts(with: "-") || $0.first?.isNumber == true) }
-            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-1234567890. ")) }
-    }
 
     // MARK: - Ollama API Implementation
     
     private func generateWithOllama(prompt: String) async throws -> String {
-        let model = ollamaModel.isEmpty ? "llama3" : ollamaModel // Fallback
+        let model = ollamaModel.isEmpty ? "llama3" : ollamaModel
         let urlString = "\(ollamaEndpoint)/api/generate"
         
         guard let url = URL(string: urlString) else {
@@ -516,43 +417,6 @@ class AIService {
         }
     }
     
-    private func analyzeWithOpenAICompatible(_ objective: Objective) async throws -> String {
-        let prompt = """
-        Analyze the following OKR Objective for quality, clarity, and measurability.
-        Provide constructive feedback on strengths and specific suggestions for improvement.
-        
-        Objective Title: "\(objective.title)"
-        Description: "\(objective.objectiveDescription)"
-        Status: \(objective.status.displayName)
-        
-        Format the response with Markdown using headers and bullet points.
-        """
-        return try await generateWithOpenAICompatible(prompt: prompt)
-    }
-    
-    private func suggestKeyResultsWithOpenAICompatible(_ objective: Objective) async throws -> [String] {
-        let prompt = """
-        Suggest 3-5 Key Results (measurable outcomes) for the following Objective.
-        Return ONLY a JSON array of strings, with no other text or markdown formatting.
-        
-        Objective: "\(objective.title)"
-        Context: "\(objective.objectiveDescription)"
-        """
-        let text = try await generateWithOpenAICompatible(prompt: prompt)
-        return parseJSONList(from: text)
-    }
-    
-    private func suggestTasksWithOpenAICompatible(_ keyResult: KeyResult) async throws -> [String] {
-         let prompt = """
-         Suggest 3-5 concrete tasks/actions to help achieve this Key Result.
-         Return ONLY a JSON array of strings, with no other text or markdown formatting.
-         
-         Key Result: "\(keyResult.title)"
-         """
-        let text = try await generateWithOpenAICompatible(prompt: prompt)
-        return parseJSONList(from: text)
-    }
-    
     // MARK: - Anthropic API Implementation
     
     private func generateWithAnthropic(prompt: String) async throws -> String {
@@ -592,46 +456,6 @@ class AIService {
         }
         return text
     }
-    
-    private func analyzeWithAnthropic(_ objective: Objective) async throws -> String {
-        let prompt = """
-        Analyze the following OKR Objective for quality, clarity, and measurability.
-        Provide constructive feedback on strengths and specific suggestions for improvement.
-        
-        Objective Title: "\(objective.title)"
-        Description: "\(objective.objectiveDescription)"
-        Status: \(objective.status.displayName)
-        
-        Format the response with Markdown using headers and bullet points.
-        """
-        return try await generateWithAnthropic(prompt: prompt)
-    }
-    
-    private func suggestKeyResultsWithAnthropic(_ objective: Objective) async throws -> [String] {
-        let prompt = """
-        Suggest 3-5 Key Results (measurable outcomes) for the following Objective.
-        Return ONLY a JSON array of strings, with no other text or markdown formatting.
-        
-        Objective: "\(objective.title)"
-        Context: "\(objective.objectiveDescription)"
-        """
-        let text = try await generateWithAnthropic(prompt: prompt)
-        return parseJSONList(from: text)
-    }
-    
-    private func suggestTasksWithAnthropic(_ keyResult: KeyResult) async throws -> [String] {
-         let prompt = """
-         Suggest 3-5 concrete tasks/actions to help achieve this Key Result.
-         Return ONLY a JSON array of strings, with no other text or markdown formatting.
-         
-         Key Result: "\(keyResult.title)"
-         """
-        let text = try await generateWithAnthropic(prompt: prompt)
-        return parseJSONList(from: text)
-    }
-
-
-
 }
 
 // MARK: - Gemini REST Data Models
@@ -746,5 +570,3 @@ struct AnthropicMessageResponse: Codable {
 struct AnthropicContent: Codable {
     let text: String
 }
-
-

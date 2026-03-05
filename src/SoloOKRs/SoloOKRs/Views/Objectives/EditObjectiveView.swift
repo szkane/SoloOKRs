@@ -2,6 +2,7 @@
 // SoloOKRs
 //
 // Created by Claude on 2026-02-06.
+// Updated 2026-03-05: Markdown editor for description.
 
 import SwiftUI
 import SwiftData
@@ -24,10 +25,14 @@ struct EditObjectiveView: View {
                     }
                 }
                 
-                Section("Details") {
+                Section("Title") {
                     TextField("Title", text: $objective.title)
-                    TextField("Description", text: $objective.objectiveDescription, axis: .vertical)
-                        .lineLimit(2...4)
+                }
+                .disabled(!canEdit)
+                
+                Section("Description") {
+                    MarkdownEditorView(text: $objective.objectiveDescription, placeholder: "Describe the objective...")
+                        .frame(minHeight: 150)
                 }
                 .disabled(!canEdit)
                 
@@ -52,6 +57,6 @@ struct EditObjectiveView: View {
                 }
             }
         }
-        .frame(minWidth: 400, minHeight: 400)
+        .frame(minWidth: 500, minHeight: 500)
     }
 }

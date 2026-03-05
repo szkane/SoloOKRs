@@ -23,6 +23,9 @@ final class Objective {
     @Relationship(deleteRule: .cascade, inverse: \KeyResult.objective)
     var keyResults: [KeyResult] = []
     
+    @Relationship(deleteRule: .cascade, inverse: \OKRReview.objective)
+    var reviews: [OKRReview] = []
+    
     init(
         id: UUID = UUID(),
         title: String,

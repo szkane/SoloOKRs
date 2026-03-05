@@ -2,9 +2,11 @@
 // SoloOKRs
 //
 // Simplified after KR type migration (2026-02-06).
+// Updated 2026-03-05: Auto-focus, removed detail label, KR evaluation with Suggest.
 
 import SwiftUI
 import SwiftData
+import MarkdownUI
 
 struct AddKeyResultView: View {
     @Environment(\.dismiss) private var dismiss
@@ -13,29 +15,20 @@ struct AddKeyResultView: View {
     let objective: Objective
     
     @State private var title = ""
+    @FocusState private var isTitleFocused: Bool
     
     // AI State
-    @State private var suggestions: [String] = []
-    @State private var showingSuggestions = false
-    @State private var isGettingSuggestions = false
+    @State private var evaluationResult: String?
+    @State private var showingEvaluation = false
+    @State private var isEvaluating = false
     
     var body: some View {
         NavigationStack {
             Form {
-                Section("Details") {
-                    TextField("Key Result Title", text: $title)
-                        .textFieldStyle(.plain)
-                }
-                
-                Section {
-                    Text("Progress will be calculated from task completion.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    
-                    Text("Add tasks after creating this Key Result.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                }
+                TextField("Key Result", text: $title)
+                    .textFieldStyle(.plain)
+                    .focused($isTitleFocused)
+                    .font(.body)
             }
             .formStyle(.grouped)
             .navigationTitle("New Key Result")
@@ -47,12 +40,17 @@ struct AddKeyResultView: View {
                 ToolbarItem(placement: .automatic) {
                     Button {
                         Task {
-                            await getSuggestions()
+                            await evaluateKR()
                         }
                     } label: {
-                        Label("Suggest", systemImage: "sparkles")
+                        if isEvaluating {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Label("Suggest", systemImage: "sparkles")
+                        }
                     }
-                    .disabled(isGettingSuggestions)
+                    .disabled(title.isEmpty || isEvaluating)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
@@ -60,51 +58,50 @@ struct AddKeyResultView: View {
                         .disabled(title.isEmpty)
                 }
             }
-            .sheet(isPresented: $showingSuggestions) {
+            .sheet(isPresented: $showingEvaluation) {
                 NavigationStack {
-                    List {
-                        if suggestions.isEmpty {
-                            Text("No suggestions available.")
-                                .foregroundStyle(.secondary)
-                        } else {
-                            ForEach(suggestions, id: \.self) { suggestion in
-                                Button {
-                                    title = suggestion
-                                    showingSuggestions = false
-                                } label: {
-                                    HStack {
-                                        Text(suggestion)
-                                            .foregroundStyle(.primary)
-                                        Spacer()
-                                        Image(systemName: "plus.circle")
-                                            .foregroundStyle(.blue)
-                                    }
-                                }
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            if let result = evaluationResult {
+                                Markdown(result)
+                                    .textSelection(.enabled)
+                                    .markdownTheme(.gitHub)
+                            } else {
+                                ContentUnavailableView("No Evaluation", systemImage: "sparkles", description: Text("Evaluation results will appear here."))
                             }
                         }
+                        .padding()
                     }
-                    .navigationTitle("AI Suggestions")
+                    .navigationTitle("KR Evaluation")
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button("Close") { showingSuggestions = false }
+                            Button("Close") { showingEvaluation = false }
                         }
                     }
                 }
-                .presentationDetents([.medium, .large])
+                .frame(minWidth: 450, minHeight: 400)
             }
         }
-        .frame(minWidth: 400, minHeight: 250)
+        .frame(minWidth: 400, minHeight: 180)
+        .onAppear {
+            isTitleFocused = true
+        }
     }
     
-    private func getSuggestions() async {
-        isGettingSuggestions = true
+    private func evaluateKR() async {
+        isEvaluating = true
         do {
-            suggestions = try await AIService.shared.suggestKeyResults(for: objective)
-            showingSuggestions = true
+            let result = try await AIService.shared.evaluateKeyResult(
+                krTitle: title,
+                objectiveTitle: objective.title
+            )
+            evaluationResult = result
+            showingEvaluation = true
         } catch {
-            print("Failed to get suggestions: \(error)")
+            evaluationResult = "### Evaluation Failed\n\n**Error:** \(error.localizedDescription)\n\nPlease check your AI Settings."
+            showingEvaluation = true
         }
-        isGettingSuggestions = false
+        isEvaluating = false
     }
     
     private func addKeyResult() {

@@ -2,6 +2,7 @@
 // SoloOKRs
 //
 // Created by Claude on 2026-02-04.
+// Updated 2026-03-05: Markdown editor for description.
 
 import SwiftUI
 import SwiftData
@@ -20,19 +21,19 @@ struct AddObjectiveView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Details") {
-                    TextField("Title", text: $title)
-                    TextField("Description", text: $description, axis: .vertical)
-                        .lineLimit(2...4)
+                Section("Title") {
+                    TextField("Objective Title", text: $title)
+                }
+                
+                Section("Description") {
+                    MarkdownEditorView(text: $description, placeholder: "Describe the objective...")
+                        .frame(minHeight: 150)
                 }
                 
                 Section("Timeline") {
                     DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
                     DatePicker("End Date", selection: $endDate, displayedComponents: .date)
                 }
-                
-                // Status selection removed - defaults to .draft
-                // Section("Status") { ... }
             }
             .formStyle(.grouped)
             .navigationTitle("New Objective")
@@ -50,7 +51,7 @@ struct AddObjectiveView: View {
                 }
             }
         }
-        .frame(minWidth: 400, minHeight: 350)
+        .frame(minWidth: 500, minHeight: 450)
     }
     
     private func addObjective() {

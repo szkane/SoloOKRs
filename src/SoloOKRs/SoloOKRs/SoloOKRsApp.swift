@@ -14,7 +14,9 @@ struct SoloOKRsApp: App {
         let schema = Schema([
             Objective.self,
             KeyResult.self,
-            OKRTask.self
+            OKRTask.self,
+            OKRReview.self,
+            KRReviewEntry.self
         ])
         let modelConfiguration = ModelConfiguration(
             schema: schema,

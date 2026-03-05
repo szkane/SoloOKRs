@@ -1,12 +1,24 @@
-> **Last Session:** 2026-03-05 08:50
-> **Current Phase:** Post-Beta Improvements + User Feedback 🛠️  
-> **Build Status:** ✅ (verified 2026-03-05 08:50)
+> **Last Session:** 2026-03-05 10:41
+> **Current Phase:** Beta 2 Improvements 🚀  
+> **Build Status:** ✅ (verified 2026-03-05 10:41)
 
 ---
 
 ## 📍 Current Focus
 
-Starting user-requested improvements (7 items remaining). Plan created at `docs/plans/2026-02-06-post-beta-improvements.md`.
+**Beta 2 Improvements** — two-phase plan at `docs/plans/2026-03-05-beta2-improvements.md`.
+
+### Phase 1: AI Function Refactoring
+
+- Extract all prompts to Settings (new Prompts tab with Markdown editor)
+- Objective Analyze with AI: include KR/Task data, new prompt, icon → magnifying glass button
+- AddKeyResultView: auto-focus, remove detail label, KR evaluation with Suggest button
+
+### Phase 2: Review Mode Redesign
+
+- Delete existing global Review mode (toggle/permissions/settings)
+- New per-Objective review records (`OKRReview` + `KRReviewEntry` models)
+- Create/view reviews with KR status, progress, blockers, next steps, trend tracking
 
 ---
 
@@ -50,24 +62,26 @@ All core phases complete:
 
 ## 🔄 Active Work
 
-None.
+- [x] Beta 2 Phase 1: AI Function Refactoring ✅
+- [x] Beta 2 Phase 2: Review Mode Redesign ✅
 
 ---
 
-## 📋 Next Up (from Post-Beta Improvement Plan)
+## 📋 Next Up
 
-1. ~~Multiple language support.~~ (Completed)
+All post-beta items completed. Beta 2 improvements are the current priority.
 
 ---
 
 ## 🔗 Quick Links
 
-| Resource           | Path                                              |
-| ------------------ | ------------------------------------------------- |
-| **Migration Plan** | `docs/plans/2026-02-06-kr-type-migration.md`      |
-| Improvement Plan   | `docs/plans/2026-02-06-post-beta-improvements.md` |
-| Design Doc         | `docs/plans/2026-02-03-solo-okrs-design.md`       |
-| Source Code        | `src/SoloOKRs/SoloOKRs/`                          |
+| Resource         | Path                                              |
+| ---------------- | ------------------------------------------------- |
+| **Beta 2 Plan**  | `docs/plans/2026-03-05-beta2-improvements.md`     |
+| Migration Plan   | `docs/plans/2026-02-06-kr-type-migration.md`      |
+| Improvement Plan | `docs/plans/2026-02-06-post-beta-improvements.md` |
+| Design Doc       | `docs/plans/2026-02-03-solo-okrs-design.md`       |
+| Source Code      | `src/SoloOKRs/SoloOKRs/`                          |
 
 ---
 
@@ -75,6 +89,7 @@ None.
 
 | Date       | Summary                                                                                                                                                                                                                                                                                                                          |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-05 | **Beta 2 Plan Created:** Designed two-phase improvement plan — Phase 1: AI refactoring (prompt management in Settings, Objective analyze UI, KR window optimization) + Phase 2: Review mode redesign (per-Objective structured reviews with KR entries). Updated CHECKPOINT.md.                                                  |
 | 2026-03-05 | **AI Provider Configuration & Integrations:** Refactored API settings to use non-dropdown models lists, added OpenAI-compatible endpoint support (Custom/LM Studio/Anthropic), fixed Observable UI state updates, and implemented secure keychain local storage UI notices with 8-language translations. Build ✅                |
 | 2026-03-04 | **Workflows & Skills:** Cleaned up `.agent` folder structure, symlinked 5 advanced skills (superpowers, debugging, code review, branch finishing), and embedded them into `/init` and `/sync` workflows. Build ✅                                                                                                                |
 | 2026-02-20 | **Bug Fix:** Fixed in-app language switcher by injecting `preferredLanguage` AppStorage value into `\.locale` environment at `SoloOKRsApp` root level. Added missing languages to Settings Picker. Build ✅                                                                                                                      |

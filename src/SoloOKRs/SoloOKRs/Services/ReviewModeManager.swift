@@ -1,7 +1,8 @@
 // ReviewModeManager.swift
 // SoloOKRs
 //
-// Review mode and notification scheduling
+// Simplified 2026-03-05: Removed global review mode toggle.
+// Keeps notification/reminder functionality. Edit permissions now status-based only.
 
 import Foundation
 import SwiftUI
@@ -12,7 +13,9 @@ import UserNotifications
 class ReviewModeManager {
     static let shared = ReviewModeManager()
 
+    // Review Mode is retained for backward compatibility but simplified
     private(set) var isInReviewMode = false
+    
     var reviewEnabled = true {
         didSet {
             UserDefaults.standard.set(reviewEnabled, forKey: "reviewEnabled")
@@ -25,7 +28,7 @@ class ReviewModeManager {
             Task { await scheduleOrCancelReminder() }
         }
     }
-    var dayOfWeek: Int = 1 {  // Monday = 1
+    var dayOfWeek: Int = 1 {
         didSet {
             UserDefaults.standard.set(dayOfWeek, forKey: "reviewDayOfWeek")
             Task { await scheduleOrCancelReminder() }
@@ -47,8 +50,6 @@ class ReviewModeManager {
     private let notificationID = "com.szkane.SoloOKRs.reviewReminder"
 
     private init() {
-        // Load saved state
-        isInReviewMode = UserDefaults.standard.bool(forKey: "isInReviewMode")
         reviewEnabled = UserDefaults.standard.object(forKey: "reviewEnabled") as? Bool ?? true
         if let freqRaw = UserDefaults.standard.string(forKey: "reviewFrequency"),
            let freq = ReviewFrequency(rawValue: freqRaw) {
@@ -77,31 +78,26 @@ class ReviewModeManager {
     
     private func scheduleOrCancelReminder() async {
         let center = UNUserNotificationCenter.current()
-        
-        // Cancel existing
         center.removePendingNotificationRequests(withIdentifiers: [notificationID])
         
         guard reviewEnabled else { return }
         
-        // Create content
         let content = UNMutableNotificationContent()
         content.title = "OKR Review Time"
-        content.body = "It's time for your weekly OKR check-in. Review your progress and update key results."
+        content.body = "It's time for your OKR check-in. Review your progress and update key results."
         content.sound = .default
         
-        // Create trigger based on frequency
         var dateComponents = DateComponents()
         dateComponents.hour = reminderHour
         dateComponents.minute = reminderMinute
         
         switch frequency {
         case .weekly:
-            dateComponents.weekday = dayOfWeek + 1  // DateComponents weekday is 1=Sunday
+            dateComponents.weekday = dayOfWeek + 1
         case .biweekly:
-            // Every 2 weeks - approximate with weekly trigger
             dateComponents.weekday = dayOfWeek + 1
         case .monthly:
-            dateComponents.day = 1  // First of each month
+            dateComponents.day = 1
         }
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
@@ -115,38 +111,21 @@ class ReviewModeManager {
         }
     }
     
-    // MARK: - Review Mode
+    // MARK: - Edit Permissions (simplified: status-based only)
 
-    func enterReviewMode() {
-        isInReviewMode = true
-        UserDefaults.standard.set(true, forKey: "isInReviewMode")
-    }
-
-    func exitReviewMode() {
-        isInReviewMode = false
-        UserDefaults.standard.set(false, forKey: "isInReviewMode")
-    }
-
-    /// Check if an Objective/KeyResult can be edited
     func canEditOKR(status: OKRStatus) -> Bool {
         switch status {
-        case .draft:
-            return true
-        case .active:
-            return isInReviewMode  // Only editable in review mode
-        case .review:
+        case .draft, .active, .review:
             return true
         case .achieved, .archived:
             return false
         }
     }
 
-    /// Check if a Task can be edited
     func canEditTask(_ task: OKRTask) -> Bool {
         guard let parentStatus = task.keyResult?.objective?.status else {
             return true
         }
-
         switch parentStatus {
         case .draft, .active, .review:
             return true
@@ -155,7 +134,6 @@ class ReviewModeManager {
         }
     }
     
-    /// Check if Tasks can be added/edited for a given KeyResult
     func canEditTask(for keyResult: KeyResult) -> Bool {
         guard let status = keyResult.objective?.status else { return true }
         switch status {
