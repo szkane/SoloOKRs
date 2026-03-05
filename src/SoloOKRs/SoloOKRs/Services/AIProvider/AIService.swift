@@ -11,117 +11,101 @@ import SwiftUI
 class AIService {
     static let shared = AIService()
 
-    var selectedProviderType: AIProviderType {
-        get {
-            if let stored = UserDefaults.standard.string(forKey: "selectedProviderType"),
-               let type = AIProviderType(rawValue: stored) {
-                return type
-            }
-            return .gemini
-        }
-        set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: "selectedProviderType")
-        }
+    var selectedProviderType: AIProviderType = .gemini {
+        didSet { UserDefaults.standard.set(selectedProviderType.rawValue, forKey: "selectedProviderType") }
     }
     var isProcessing = false
     var lastError: AIError?
 
-    private init() {}
+    var geminiAPIKey: String = "" {
+        didSet { updateKeychain(geminiAPIKey, account: "apikey", service: "com.solookrs.gemini") }
+    }
+    var openAIAPIKey: String = "" {
+        didSet { updateKeychain(openAIAPIKey, account: "apikey", service: "com.solookrs.openai") }
+    }
+    var anthropicAPIKey: String = "" {
+        didSet { updateKeychain(anthropicAPIKey, account: "apikey", service: "com.solookrs.anthropic") }
+    }
+    var lmStudioAPIKey: String = "" {
+        didSet { updateKeychain(lmStudioAPIKey, account: "apikey", service: "com.solookrs.lmstudio") }
+    }
+    var customAPIKey: String = "" {
+        didSet { updateKeychain(customAPIKey, account: "apikey", service: "com.solookrs.custom") }
+    }
+
+    var ollamaEndpoint: String = "" {
+        didSet { UserDefaults.standard.set(ollamaEndpoint, forKey: "ollamaEndpoint") }
+    }
+    var lmStudioEndpoint: String = "" {
+        didSet { UserDefaults.standard.set(lmStudioEndpoint, forKey: "lmStudioEndpoint") }
+    }
+    var customEndpoint: String = "" {
+        didSet { UserDefaults.standard.set(customEndpoint, forKey: "customEndpoint") }
+    }
+
+    var geminiModel: String = "" {
+        didSet { UserDefaults.standard.set(geminiModel, forKey: "geminiModel") }
+    }
+    var openAIModel: String = "" {
+        didSet { UserDefaults.standard.set(openAIModel, forKey: "openAIModel") }
+    }
+    var anthropicModel: String = "" {
+        didSet { UserDefaults.standard.set(anthropicModel, forKey: "anthropicModel") }
+    }
+    var ollamaModel: String = "" {
+        didSet { UserDefaults.standard.set(ollamaModel, forKey: "ollamaModel") }
+    }
+    var lmStudioModel: String = "" {
+        didSet { UserDefaults.standard.set(lmStudioModel, forKey: "lmStudioModel") }
+    }
+    var customModel: String = "" {
+        didSet { UserDefaults.standard.set(customModel, forKey: "customModel") }
+    }
+    
+    private init() {
+        if let stored = UserDefaults.standard.string(forKey: "selectedProviderType"),
+           let type = AIProviderType(rawValue: stored) {
+            self.selectedProviderType = type
+        }
+        
+        self.geminiAPIKey = KeychainHelper.shared.readString(service: "com.solookrs.gemini", account: "apikey") ?? ""
+        self.openAIAPIKey = KeychainHelper.shared.readString(service: "com.solookrs.openai", account: "apikey") ?? ""
+        self.anthropicAPIKey = KeychainHelper.shared.readString(service: "com.solookrs.anthropic", account: "apikey") ?? ""
+        self.lmStudioAPIKey = KeychainHelper.shared.readString(service: "com.solookrs.lmstudio", account: "apikey") ?? ""
+        self.customAPIKey = KeychainHelper.shared.readString(service: "com.solookrs.custom", account: "apikey") ?? ""
+        
+        let rawOllama = UserDefaults.standard.string(forKey: "ollamaEndpoint") ?? "http://127.0.0.1:11434"
+        self.ollamaEndpoint = rawOllama.hasSuffix("/") ? String(rawOllama.dropLast()) : rawOllama
+        self.lmStudioEndpoint = UserDefaults.standard.string(forKey: "lmStudioEndpoint") ?? "http://localhost:1234"
+        self.customEndpoint = UserDefaults.standard.string(forKey: "customEndpoint") ?? ""
+        
+        self.geminiModel = UserDefaults.standard.string(forKey: "geminiModel") ?? "gemini-1.5-flash"
+        self.openAIModel = UserDefaults.standard.string(forKey: "openAIModel") ?? "gpt-4o"
+        self.anthropicModel = UserDefaults.standard.string(forKey: "anthropicModel") ?? "claude-3-5-sonnet-20240620"
+        self.ollamaModel = UserDefaults.standard.string(forKey: "ollamaModel") ?? "llama3"
+        self.lmStudioModel = UserDefaults.standard.string(forKey: "lmStudioModel") ?? "local-model"
+        self.customModel = UserDefaults.standard.string(forKey: "customModel") ?? ""
+    }
+
+    private func updateKeychain(_ value: String, account: String, service: String) {
+        if value.isEmpty {
+            KeychainHelper.shared.delete(service: service, account: account)
+        } else {
+            KeychainHelper.shared.save(value, service: service, account: account)
+        }
+    }
 
     var isConfigured: Bool {
         // Check if current provider has API key
         switch selectedProviderType {
-        case .gemini:
-            return !geminiAPIKey.isEmpty
-        case .openai:
-            return !openAIAPIKey.isEmpty
-        case .anthropic:
-            return !anthropicAPIKey.isEmpty
-        case .ollama, .lmstudio:
-            return true  // Local providers don't need API key
-        case .custom:
-            return !customEndpoint.isEmpty
+        case .gemini: return !geminiAPIKey.isEmpty
+        case .openai: return !openAIAPIKey.isEmpty
+        case .anthropic: return !anthropicAPIKey.isEmpty
+        case .ollama, .lmstudio: return true
+        case .custom: return !customEndpoint.isEmpty
         }
     }
 
-    // API Keys stored via Keychain
-    var geminiAPIKey: String {
-        get { KeychainHelper.shared.readString(service: "com.solookrs.gemini", account: "apikey") ?? "" }
-        set {
-            if newValue.isEmpty {
-                KeychainHelper.shared.delete(service: "com.solookrs.gemini", account: "apikey")
-            } else {
-                KeychainHelper.shared.save(newValue, service: "com.solookrs.gemini", account: "apikey")
-            }
-        }
-    }
-
-    var openAIAPIKey: String {
-        get { KeychainHelper.shared.readString(service: "com.solookrs.openai", account: "apikey") ?? "" }
-        set {
-            if newValue.isEmpty {
-                KeychainHelper.shared.delete(service: "com.solookrs.openai", account: "apikey")
-            } else {
-                KeychainHelper.shared.save(newValue, service: "com.solookrs.openai", account: "apikey")
-            }
-        }
-    }
-
-    var anthropicAPIKey: String {
-        get { KeychainHelper.shared.readString(service: "com.solookrs.anthropic", account: "apikey") ?? "" }
-        set {
-            if newValue.isEmpty {
-                KeychainHelper.shared.delete(service: "com.solookrs.anthropic", account: "apikey")
-            } else {
-                KeychainHelper.shared.save(newValue, service: "com.solookrs.anthropic", account: "apikey")
-            }
-        }
-    }
-
-    var ollamaEndpoint: String {
-        get { 
-            let stored = UserDefaults.standard.string(forKey: "ollamaEndpoint") ?? "http://127.0.0.1:11434"
-            // Ensure no trailing slash
-            return stored.hasSuffix("/") ? String(stored.dropLast()) : stored
-        }
-        set { UserDefaults.standard.set(newValue, forKey: "ollamaEndpoint") }
-    }
-
-    var lmStudioEndpoint: String {
-        get { UserDefaults.standard.string(forKey: "lmStudioEndpoint") ?? "http://localhost:1234" }
-        set { UserDefaults.standard.set(newValue, forKey: "lmStudioEndpoint") }
-    }
-
-    var customEndpoint: String {
-        get { UserDefaults.standard.string(forKey: "customEndpoint") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "customEndpoint") }
-    }
-
-    var geminiModel: String {
-        get { UserDefaults.standard.string(forKey: "geminiModel") ?? "gemini-1.5-flash" }
-        set { UserDefaults.standard.set(newValue, forKey: "geminiModel") }
-    }
-    
-    var openAIModel: String {
-        get { UserDefaults.standard.string(forKey: "openAIModel") ?? "gpt-4o" }
-        set { UserDefaults.standard.set(newValue, forKey: "openAIModel") }
-    }
-    
-    var anthropicModel: String {
-        get { UserDefaults.standard.string(forKey: "anthropicModel") ?? "claude-3-5-sonnet-20240620" }
-        set { UserDefaults.standard.set(newValue, forKey: "anthropicModel") }
-    }
-    
-    var ollamaModel: String {
-        get { UserDefaults.standard.string(forKey: "ollamaModel") ?? "llama3" }
-        set { UserDefaults.standard.set(newValue, forKey: "ollamaModel") }
-    }
-    
-    var lmStudioModel: String {
-        get { UserDefaults.standard.string(forKey: "lmStudioModel") ?? "local-model" }
-        set { UserDefaults.standard.set(newValue, forKey: "lmStudioModel") }
-    }
-    
     var selectedModel: String {
         get {
             switch selectedProviderType {
@@ -130,7 +114,7 @@ class AIService {
             case .anthropic: return anthropicModel
             case .ollama: return ollamaModel
             case .lmstudio: return lmStudioModel
-            case .custom: return "custom"
+            case .custom: return customModel
             }
         }
         set {
@@ -140,7 +124,7 @@ class AIService {
             case .anthropic: anthropicModel = newValue
             case .ollama: ollamaModel = newValue
             case .lmstudio: lmStudioModel = newValue
-            case .custom: break
+            case .custom: customModel = newValue
             }
         }
     }
@@ -215,12 +199,24 @@ class AIService {
         case .lmstudio:
              let urlString = "\(lmStudioEndpoint)/v1/models"
              guard let url = URL(string: urlString) else { throw AIError.apiError("Invalid URL") }
-             let (data, _) = try await URLSession.shared.data(from: url)
+             var request = URLRequest(url: url)
+             if !lmStudioAPIKey.isEmpty {
+                 request.addValue("Bearer \(lmStudioAPIKey)", forHTTPHeaderField: "Authorization")
+             }
+             let (data, _) = try await URLSession.shared.data(for: request)
              let response = try JSONDecoder().decode(OpenAIModelListResponse.self, from: data) // LM Studio mimics OpenAI
              self.availableModels = response.data.map { $0.id }.sorted()
              
         case .custom:
-             self.availableModels = ["custom-model"]
+             let urlString = "\(customEndpoint)/v1/models"
+             guard let url = URL(string: urlString) else { throw AIError.apiError("Invalid URL") }
+             var request = URLRequest(url: url)
+             if !customAPIKey.isEmpty {
+                 request.addValue("Bearer \(customAPIKey)", forHTTPHeaderField: "Authorization")
+             }
+             let (data, _) = try await URLSession.shared.data(for: request)
+             let response = try JSONDecoder().decode(OpenAIModelListResponse.self, from: data)
+             self.availableModels = response.data.map { $0.id }.sorted()
         }
         
         // Auto-select first model if current selection is invalid or empty
@@ -247,9 +243,10 @@ class AIService {
             return try await analyzeWithGemini(objective)
         case .ollama:
             return try await analyzeWithOllama(objective)
-        default:
-            try await Task.sleep(for: .seconds(1))
-            return "Analysis for \(selectedProviderType.rawValue) is not fully implemented yet."
+        case .anthropic:
+             return try await analyzeWithAnthropic(objective)
+        case .openai, .lmstudio, .custom:
+             return try await analyzeWithOpenAICompatible(objective)
         }
     }
     
@@ -280,9 +277,10 @@ class AIService {
             return try await suggestKeyResultsWithGemini(objective)
         case .ollama:
             return try await suggestKeyResultsWithOllama(objective)
-        default:
-            try await Task.sleep(for: .seconds(1))
-            return ["Suggestion 1", "Suggestion 2", "Suggestion 3"]
+        case .anthropic:
+            return try await suggestKeyResultsWithAnthropic(objective)
+        case .openai, .lmstudio, .custom:
+            return try await suggestKeyResultsWithOpenAICompatible(objective)
         }
     }
 
@@ -466,6 +464,174 @@ class AIService {
         return ollamaResponse.response
     }
 
+    // MARK: - OpenAI Compatible API Implementation
+    
+    private func generateWithOpenAICompatible(prompt: String) async throws -> String {
+        let (endpoint, apiKey, model) = getOpenAICompatibleConfig()
+        
+        guard let url = URL(string: "\(endpoint)/v1/chat/completions") else {
+            throw AIError.apiError("Invalid URL")
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !apiKey.isEmpty {
+            request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let requestBody = OpenAIChatRequest(
+            model: model,
+            messages: [OpenAIChatMessage(role: "user", content: prompt)]
+        )
+        
+        request.httpBody = try JSONEncoder().encode(requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            if let errorStr = String(data: data, encoding: .utf8) {
+                print("OpenAI Error: \(errorStr)")
+            }
+            throw AIError.apiError("OpenAI Compatible HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        }
+        
+        let chatResponse = try JSONDecoder().decode(OpenAIChatResponse.self, from: data)
+        guard let text = chatResponse.choices.first?.message.content else {
+            throw AIError.invalidResponse
+        }
+        return text
+    }
+    
+    private func getOpenAICompatibleConfig() -> (String, String, String) {
+        switch selectedProviderType {
+        case .openai:
+            return ("https://api.openai.com", openAIAPIKey, openAIModel.isEmpty ? "gpt-4o" : openAIModel)
+        case .lmstudio:
+            return (lmStudioEndpoint, lmStudioAPIKey, lmStudioModel)
+        case .custom:
+            return (customEndpoint, customAPIKey, selectedModel)
+        default:
+            return ("", "", "")
+        }
+    }
+    
+    private func analyzeWithOpenAICompatible(_ objective: Objective) async throws -> String {
+        let prompt = """
+        Analyze the following OKR Objective for quality, clarity, and measurability.
+        Provide constructive feedback on strengths and specific suggestions for improvement.
+        
+        Objective Title: "\(objective.title)"
+        Description: "\(objective.objectiveDescription)"
+        Status: \(objective.status.displayName)
+        
+        Format the response with Markdown using headers and bullet points.
+        """
+        return try await generateWithOpenAICompatible(prompt: prompt)
+    }
+    
+    private func suggestKeyResultsWithOpenAICompatible(_ objective: Objective) async throws -> [String] {
+        let prompt = """
+        Suggest 3-5 Key Results (measurable outcomes) for the following Objective.
+        Return ONLY a JSON array of strings, with no other text or markdown formatting.
+        
+        Objective: "\(objective.title)"
+        Context: "\(objective.objectiveDescription)"
+        """
+        let text = try await generateWithOpenAICompatible(prompt: prompt)
+        return parseJSONList(from: text)
+    }
+    
+    private func suggestTasksWithOpenAICompatible(_ keyResult: KeyResult) async throws -> [String] {
+         let prompt = """
+         Suggest 3-5 concrete tasks/actions to help achieve this Key Result.
+         Return ONLY a JSON array of strings, with no other text or markdown formatting.
+         
+         Key Result: "\(keyResult.title)"
+         """
+        let text = try await generateWithOpenAICompatible(prompt: prompt)
+        return parseJSONList(from: text)
+    }
+    
+    // MARK: - Anthropic API Implementation
+    
+    private func generateWithAnthropic(prompt: String) async throws -> String {
+        let model = anthropicModel.isEmpty ? "claude-3-5-sonnet-20240620" : anthropicModel
+        let urlString = "https://api.anthropic.com/v1/messages"
+        
+        guard let url = URL(string: urlString) else {
+            throw AIError.apiError("Invalid URL")
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue(anthropicAPIKey, forHTTPHeaderField: "x-api-key")
+        request.addValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        
+        let requestBody = AnthropicMessageRequest(
+            model: model,
+            max_tokens: 1024,
+            messages: [AnthropicMessage(role: "user", content: prompt)]
+        )
+        
+        request.httpBody = try JSONEncoder().encode(requestBody)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            if let errorStr = String(data: data, encoding: .utf8) {
+                print("Anthropic Error: \(errorStr)")
+            }
+            throw AIError.apiError("Anthropic HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        }
+        
+        let anthropicResponse = try JSONDecoder().decode(AnthropicMessageResponse.self, from: data)
+        guard let text = anthropicResponse.content.first?.text else {
+            throw AIError.invalidResponse
+        }
+        return text
+    }
+    
+    private func analyzeWithAnthropic(_ objective: Objective) async throws -> String {
+        let prompt = """
+        Analyze the following OKR Objective for quality, clarity, and measurability.
+        Provide constructive feedback on strengths and specific suggestions for improvement.
+        
+        Objective Title: "\(objective.title)"
+        Description: "\(objective.objectiveDescription)"
+        Status: \(objective.status.displayName)
+        
+        Format the response with Markdown using headers and bullet points.
+        """
+        return try await generateWithAnthropic(prompt: prompt)
+    }
+    
+    private func suggestKeyResultsWithAnthropic(_ objective: Objective) async throws -> [String] {
+        let prompt = """
+        Suggest 3-5 Key Results (measurable outcomes) for the following Objective.
+        Return ONLY a JSON array of strings, with no other text or markdown formatting.
+        
+        Objective: "\(objective.title)"
+        Context: "\(objective.objectiveDescription)"
+        """
+        let text = try await generateWithAnthropic(prompt: prompt)
+        return parseJSONList(from: text)
+    }
+    
+    private func suggestTasksWithAnthropic(_ keyResult: KeyResult) async throws -> [String] {
+         let prompt = """
+         Suggest 3-5 concrete tasks/actions to help achieve this Key Result.
+         Return ONLY a JSON array of strings, with no other text or markdown formatting.
+         
+         Key Result: "\(keyResult.title)"
+         """
+        let text = try await generateWithAnthropic(prompt: prompt)
+        return parseJSONList(from: text)
+    }
+
+
+
 }
 
 // MARK: - Gemini REST Data Models
@@ -539,3 +705,46 @@ struct OllamaGenerateResponse: Codable {
     let response: String
     let done: Bool
 }
+
+// MARK: - OpenAI Compatible Chat Models
+
+struct OpenAIChatRequest: Codable {
+    let model: String
+    let messages: [OpenAIChatMessage]
+}
+
+struct OpenAIChatMessage: Codable {
+    let role: String
+    let content: String
+}
+
+struct OpenAIChatResponse: Codable {
+    let choices: [OpenAIChoice]
+}
+
+struct OpenAIChoice: Codable {
+    let message: OpenAIChatMessage
+}
+
+// MARK: - Anthropic Models
+
+struct AnthropicMessageRequest: Codable {
+    let model: String
+    let max_tokens: Int
+    let messages: [AnthropicMessage]
+}
+
+struct AnthropicMessage: Codable {
+    let role: String
+    let content: String
+}
+
+struct AnthropicMessageResponse: Codable {
+    let content: [AnthropicContent]
+}
+
+struct AnthropicContent: Codable {
+    let text: String
+}
+
+

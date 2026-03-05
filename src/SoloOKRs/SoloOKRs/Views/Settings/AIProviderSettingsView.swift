@@ -24,7 +24,7 @@ struct AIProviderSettingsView: View {
                 Text("Select which AI provider to use for analysis and suggestions.")
             }
             
-            Section("Configuration") {
+            Section {
                 switch aiService.selectedProviderType {
                 case .gemini:
                     providerConfigSection(
@@ -55,15 +55,63 @@ struct AIProviderSettingsView: View {
                     }
                     
                 case .lmstudio:
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 12) {
                         TextField("LM Studio Endpoint", text: $aiService.lmStudioEndpoint)
                             .textFieldStyle(.roundedBorder)
+                        
+                        Text("API Key (Optional)")
+                        HStack {
+                            if showingKeyVisible {
+                                TextField("Enter API Key", text: Binding(get: { aiService.lmStudioAPIKey }, set: { aiService.lmStudioAPIKey = $0 }))
+                                    .textFieldStyle(.roundedBorder)
+                            } else {
+                                SecureField("Enter API Key", text: Binding(get: { aiService.lmStudioAPIKey }, set: { aiService.lmStudioAPIKey = $0 }))
+                                    .textFieldStyle(.roundedBorder)
+                            }
+                            
+                            Button {
+                                showingKeyVisible.toggle()
+                            } label: {
+                                Image(systemName: showingKeyVisible ? "eye.slash" : "eye")
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                        
+                        Divider()
                         modelSelectionView
                     }
                     
                 case .custom:
-                    TextField("Custom Endpoint", text: $aiService.customEndpoint)
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField("Custom Endpoint", text: $aiService.customEndpoint)
+                            .textFieldStyle(.roundedBorder)
+                        
+                        Text("API Key (Optional)")
+                        HStack {
+                            if showingKeyVisible {
+                                TextField("Enter API Key", text: Binding(get: { aiService.customAPIKey }, set: { aiService.customAPIKey = $0 }))
+                                    .textFieldStyle(.roundedBorder)
+                            } else {
+                                SecureField("Enter API Key", text: Binding(get: { aiService.customAPIKey }, set: { aiService.customAPIKey = $0 }))
+                                    .textFieldStyle(.roundedBorder)
+                            }
+                            
+                            Button {
+                                showingKeyVisible.toggle()
+                            } label: {
+                                Image(systemName: showingKeyVisible ? "eye.slash" : "eye")
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                        
+                        Divider()
+                        modelSelectionView
+                    }
                 }
+            } header: {
+                Text("Configuration")
+            } footer: {
+                Text("API keys are securely stored in your device's local Keychain and are never sent to our servers.")
             }
             
             if aiService.isConfigured {
@@ -93,6 +141,16 @@ struct AIProviderSettingsView: View {
         }
         .onChange(of: aiService.selectedProviderType) { _, _ in
             aiService.availableModels = []
+            
+            if aiService.isConfigured {
+                Task {
+                    do {
+                        try await aiService.fetchModels()
+                    } catch {
+                        aiService.lastError = error as? AIError ?? .networkError(error)
+                    }
+                }
+            }
         }
     }
     
@@ -153,12 +211,35 @@ struct AIProviderSettingsView: View {
             }
             
             if !aiService.availableModels.isEmpty {
-                Picker("Model", selection: $aiService.selectedModel) {
-                     ForEach(aiService.availableModels, id: \.self) { model in
-                         Text(model).tag(model)
-                     }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(aiService.availableModels, id: \.self) { model in
+                            Button {
+                                aiService.selectedModel = model
+                            } label: {
+                                HStack {
+                                    Text(model)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    if aiService.selectedModel == model {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(.blue)
+                                    }
+                                }
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(aiService.selectedModel == model ? Color.blue.opacity(0.1) : Color.clear)
+                                )
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
-                .pickerStyle(.menu)
+                .frame(maxHeight: 200)
+                .padding(.top, 4)
             } else {
                 if let error = aiService.lastError {
                     Text("Error: \(error.localizedDescription)")

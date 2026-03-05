@@ -38,7 +38,7 @@ struct SettingsView: View {
                     Label("Review", systemImage: "calendar.badge.clock")
                 }
         }
-        .frame(width: 500, height: 400)
+        .frame(minWidth: 600, idealWidth: 700, minHeight: 450, idealHeight: 550)
     }
 }
 

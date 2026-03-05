@@ -23,5 +23,5 @@ cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build 2>&1 | tail -5
 ## Quick Reference
 
 - **Source:** `src/SoloOKRs/SoloOKRs/`
-- **Implementation Plan:** `docs/plans/2026-02-06-post-beta-improvements.md`
+- **Implementation Plan:** `docs/plans/2026-03-05-ai-provider-improvements.md`
 - **Design Doc:** `docs/plans/2026-02-03-solo-okrs-design.md`
