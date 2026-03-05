@@ -20,8 +20,11 @@ struct AddTaskView: View {
     
     // AI State
     @State private var suggestions: [String] = []
+    @State private var rawSuggestionText: String = ""
     @State private var showingSuggestions = false
     @State private var isGettingSuggestions = false
+    @State private var suggestionTask: Task<Void, Never>?
+    @State private var suggestionError: String?
     
     var body: some View {
         NavigationStack {
@@ -79,9 +82,7 @@ struct AddTaskView: View {
                 
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        Task {
-                            await getSuggestions()
-                        }
+                        getSuggestions()
                     } label: {
                         Label(LocalizedStringKey("Suggest"), systemImage: "sparkles")
                     }
@@ -96,7 +97,17 @@ struct AddTaskView: View {
             .sheet(isPresented: $showingSuggestions) {
                 NavigationStack {
                     List {
-                        if suggestions.isEmpty {
+                        if isGettingSuggestions && suggestions.isEmpty {
+                            HStack {
+                                ProgressView()
+                                    .padding(.trailing, 8)
+                                Text(LocalizedStringKey("Generating suggestions..."))
+                                    .foregroundStyle(.secondary)
+                            }
+                        } else if let error = suggestionError {
+                            Text(error)
+                                .foregroundStyle(.red)
+                        } else if suggestions.isEmpty && !isGettingSuggestions {
                             Text(LocalizedStringKey("No suggestions available."))
                                 .foregroundStyle(.secondary)
                         } else {
@@ -118,26 +129,74 @@ struct AddTaskView: View {
                     }
                     .navigationTitle(LocalizedStringKey("AI Suggestions"))
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
+                        if isGettingSuggestions {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(role: .destructive) {
+                                    suggestionTask?.cancel()
+                                    isGettingSuggestions = false
+                                } label: {
+                                    Label(LocalizedStringKey("Stop"), systemImage: "stop.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
                             Button(LocalizedStringKey("Close")) { showingSuggestions = false }
                         }
                     }
                 }
                 .presentationDetents([.medium, .large])
+                .onDisappear {
+                    suggestionTask?.cancel()
+                    isGettingSuggestions = false
+                }
             }
         }
         .frame(minWidth: 900, idealWidth: 1000, maxWidth: .infinity, minHeight: 600, idealHeight: 700, maxHeight: .infinity)
     }
     
-    private func getSuggestions() async {
+    private func getSuggestions() {
+        suggestions = []
+        rawSuggestionText = ""
+        suggestionError = nil
         isGettingSuggestions = true
-        do {
-            suggestions = try await AIService.shared.suggestTasks(for: keyResult)
-            showingSuggestions = true
-        } catch {
-            print("Failed to get suggestions: \(error)")
+        showingSuggestions = true
+        
+        suggestionTask?.cancel()
+        suggestionTask = Task {
+            do {
+                let stream = AIService.shared.suggestTasksStream(for: keyResult)
+                for try await chunk in stream {
+                    guard !Task.isCancelled else { break }
+                    rawSuggestionText += chunk
+                    suggestions = parseJSONList(from: rawSuggestionText)
+                }
+            } catch {
+                if !Task.isCancelled {
+                    suggestionError = "Failed to get suggestions: \(error.localizedDescription)"
+                    print("Failed to get suggestions: \(error)")
+                }
+            }
+            isGettingSuggestions = false
         }
-        isGettingSuggestions = false
+    }
+    
+    private func parseJSONList(from text: String) -> [String] {
+        let cleanText = text.replacingOccurrences(of: "```json", with: "")
+                            .replacingOccurrences(of: "```", with: "")
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if let data = cleanText.data(using: .utf8),
+           let suggestions = try? JSONDecoder().decode([String].self, from: data) {
+            return suggestions
+        }
+        
+        // Fallback: split by newlines if JSON parsing fails/is incomplete
+        return cleanText.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && ($0.starts(with: "-") || $0.first?.isNumber == true) }
+            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-1234567890. \"[],")) }
+            .filter { !$0.isEmpty }
     }
     
     private func addTask() {

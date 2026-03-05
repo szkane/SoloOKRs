@@ -229,6 +229,11 @@ class AIService {
         return try await generate(prompt: prompt)
     }
 
+    func analyzeOKRStream(_ objective: Objective) -> AsyncThrowingStream<String, Error> {
+        let prompt = PromptManager.shared.resolvedAnalyzePrompt(for: objective)
+        return generateStream(prompt: prompt)
+    }
+
     func suggestKeyResults(for objective: Objective) async throws -> [String] {
         let prompt = PromptManager.shared.resolvedSuggestKRPrompt(for: objective)
         let text = try await generate(prompt: prompt)
@@ -241,31 +246,59 @@ class AIService {
         return parseJSONList(from: text)
     }
 
+    func suggestTasksStream(for keyResult: KeyResult) -> AsyncThrowingStream<String, Error> {
+        let prompt = PromptManager.shared.resolvedSuggestTaskPrompt(for: keyResult)
+        return generateStream(prompt: prompt)
+    }
+
     func evaluateKeyResult(krTitle: String, objectiveTitle: String) async throws -> String {
         let prompt = PromptManager.shared.resolvedEvaluateKRPrompt(objectiveTitle: objectiveTitle, krTitle: krTitle)
         return try await generate(prompt: prompt)
     }
     
-    // MARK: - Unified Generate (routes to correct provider)
+    func evaluateKeyResultStream(krTitle: String, objectiveTitle: String) -> AsyncThrowingStream<String, Error> {
+        let prompt = PromptManager.shared.resolvedEvaluateKRPrompt(objectiveTitle: objectiveTitle, krTitle: krTitle)
+        return generateStream(prompt: prompt)
+    }
     
+    // MARK: - Unified Generate Streaming (routes to correct provider)
+    
+    private func generateStream(prompt: String) -> AsyncThrowingStream<String, Error> {
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    guard isConfigured else {
+                        throw AIError.notConfigured
+                    }
+                    
+                    isProcessing = true
+                    defer { isProcessing = false }
+                    
+                    switch selectedProviderType {
+                    case .gemini:
+                        try await generateStreamWithGemini(prompt: prompt, continuation: continuation)
+                    case .ollama:
+                        try await generateStreamWithOllama(prompt: prompt, continuation: continuation)
+                    case .anthropic:
+                        try await generateStreamWithAnthropic(prompt: prompt, continuation: continuation)
+                    case .openai, .lmstudio, .custom:
+                        try await generateStreamWithOpenAICompatible(prompt: prompt, continuation: continuation)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+    
+    // Fallback block for non-streaming usage
     private func generate(prompt: String) async throws -> String {
-        guard isConfigured else {
-            throw AIError.notConfigured
+        var fullText = ""
+        for try await chunk in generateStream(prompt: prompt) {
+            fullText += chunk
         }
-        
-        isProcessing = true
-        defer { isProcessing = false }
-        
-        switch selectedProviderType {
-        case .gemini:
-            return try await generateWithGemini(prompt: prompt)
-        case .ollama:
-            return try await generateWithOllama(prompt: prompt)
-        case .anthropic:
-            return try await generateWithAnthropic(prompt: prompt)
-        case .openai, .lmstudio, .custom:
-            return try await generateWithOpenAICompatible(prompt: prompt)
-        }
+        return fullText
     }
 
     // MARK: - JSON Parsing
@@ -289,9 +322,9 @@ class AIService {
 
     // MARK: - Gemini REST API Implementation
     
-    private func generateWithGemini(prompt: String) async throws -> String {
+    private func generateStreamWithGemini(prompt: String, continuation: AsyncThrowingStream<String, Error>.Continuation) async throws {
         let model = geminiModel.isEmpty ? "gemini-1.5-flash" : geminiModel
-        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(geminiAPIKey)"
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):streamGenerateContent?key=\(geminiAPIKey)"
         guard let url = URL(string: urlString) else {
             throw AIError.apiError("Invalid URL")
         }
@@ -308,31 +341,52 @@ class AIService {
         
         request.httpBody = try JSONEncoder().encode(requestBody)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        // For Gemini, streamGenerateContent returns a JSON array of chunk objects
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIError.networkError(NSError(domain: "Network", code: -1))
         }
         
         guard httpResponse.statusCode == 200 else {
-            if let errorResponse = try? JSONDecoder().decode(GeminiErrorResponse.self, from: data) {
-                throw AIError.apiError(errorResponse.error.message)
-            }
             throw AIError.apiError("HTTP \(httpResponse.statusCode)")
         }
         
-        let geminiResponse = try JSONDecoder().decode(GeminiResponse.self, from: data)
-        
-        guard let text = geminiResponse.candidates.first?.content.parts.first?.text else {
-            throw AIError.apiError("No content generated")
+        // Very basic JSON streaming parsing for Gemini REST Array format
+        var buffer = ""
+        for try await byte in bytes {
+            guard !Task.isCancelled else { break }
+            let char = String(decoding: [byte], as: UTF8.self)
+            buffer.append(char)
+            
+            // Try to extract text elements
+            if buffer.contains("\"text\": \"") {
+                if let rangeStart = buffer.range(of: "\"text\": \"")?.upperBound {
+                    let substring = buffer[rangeStart...]
+                    if let rangeEnd = substring.firstIndex(of: "\"") {
+                        let textRaw = String(buffer[rangeStart..<rangeEnd])
+                        // Handle basic escaped newlines
+                        let text = textRaw.replacingOccurrences(of: "\\n", with: "\n")
+                                          .replacingOccurrences(of: "\\\"", with: "\"")
+                        if !text.isEmpty {
+                            continuation.yield(text)
+                        }
+                        // clear buffer up to this point
+                        buffer = String(buffer[rangeEnd...])
+                    }
+                }
+            }
+            
+            // Periodically clear large buffers
+            if buffer.count > 10000 {
+                buffer = ""
+            }
         }
-        
-        return text
     }
 
     // MARK: - Ollama API Implementation
     
-    private func generateWithOllama(prompt: String) async throws -> String {
+    private func generateStreamWithOllama(prompt: String, continuation: AsyncThrowingStream<String, Error>.Continuation) async throws {
         let model = ollamaModel.isEmpty ? "llama3" : ollamaModel
         let urlString = "\(ollamaEndpoint)/api/generate"
         
@@ -347,27 +401,29 @@ class AIService {
         let requestBody = OllamaGenerateRequest(
             model: model,
             prompt: prompt,
-            stream: false
+            stream: true
         )
         
         request.httpBody = try JSONEncoder().encode(requestBody)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            if let errorStr = String(data: data, encoding: .utf8) {
-                print("Ollama Error: \(errorStr)")
-            }
             throw AIError.apiError("Ollama HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
         }
         
-        let ollamaResponse = try JSONDecoder().decode(OllamaGenerateResponse.self, from: data)
-        return ollamaResponse.response
+        for try await line in bytes.lines {
+            guard !Task.isCancelled else { break }
+            guard let data = line.data(using: .utf8) else { continue }
+            if let ollamaResponse = try? JSONDecoder().decode(OllamaGenerateResponse.self, from: data) {
+                continuation.yield(ollamaResponse.response)
+            }
+        }
     }
 
     // MARK: - OpenAI Compatible API Implementation
     
-    private func generateWithOpenAICompatible(prompt: String) async throws -> String {
+    private func generateStreamWithOpenAICompatible(prompt: String, continuation: AsyncThrowingStream<String, Error>.Continuation) async throws {
         let (endpoint, apiKey, model) = getOpenAICompatibleConfig()
         
         guard let url = URL(string: "\(endpoint)/v1/chat/completions") else {
@@ -381,27 +437,34 @@ class AIService {
             request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         }
         
-        let requestBody = OpenAIChatRequest(
+        let requestBody = OpenAIChatStreamRequest(
             model: model,
-            messages: [OpenAIChatMessage(role: "user", content: prompt)]
+            messages: [OpenAIChatMessage(role: "user", content: prompt)],
+            stream: true
         )
         
         request.httpBody = try JSONEncoder().encode(requestBody)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            if let errorStr = String(data: data, encoding: .utf8) {
-                print("OpenAI Error: \(errorStr)")
-            }
             throw AIError.apiError("OpenAI Compatible HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
         }
         
-        let chatResponse = try JSONDecoder().decode(OpenAIChatResponse.self, from: data)
-        guard let text = chatResponse.choices.first?.message.content else {
-            throw AIError.invalidResponse
+        for try await line in bytes.lines {
+            guard !Task.isCancelled else { break }
+            let dataStr = line.replacingOccurrences(of: "data: ", with: "")
+            guard dataStr != "[DONE]" else { break }
+            
+            if let data = dataStr.data(using: .utf8),
+               let chatResponse = try? JSONDecoder().decode(OpenAIChatStreamResponse.self, from: data),
+               let text = chatResponse.choices.first?.delta.content {
+                // Ignore initial empty content payloads typically seen at stream start
+                if !text.isEmpty {
+                    continuation.yield(text)
+                }
+            }
         }
-        return text
     }
     
     private func getOpenAICompatibleConfig() -> (String, String, String) {
@@ -419,7 +482,7 @@ class AIService {
     
     // MARK: - Anthropic API Implementation
     
-    private func generateWithAnthropic(prompt: String) async throws -> String {
+    private func generateStreamWithAnthropic(prompt: String, continuation: AsyncThrowingStream<String, Error>.Continuation) async throws {
         let model = anthropicModel.isEmpty ? "claude-3-5-sonnet-20240620" : anthropicModel
         let urlString = "https://api.anthropic.com/v1/messages"
         
@@ -432,29 +495,36 @@ class AIService {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue(anthropicAPIKey, forHTTPHeaderField: "x-api-key")
         request.addValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.addValue("true", forHTTPHeaderField: "anthropic-beta") // Depending on API stream access specifics
         
-        let requestBody = AnthropicMessageRequest(
+        let requestBody = AnthropicMessageStreamRequest(
             model: model,
             max_tokens: 1024,
-            messages: [AnthropicMessage(role: "user", content: prompt)]
+            messages: [AnthropicMessage(role: "user", content: prompt)],
+            stream: true
         )
         
         request.httpBody = try JSONEncoder().encode(requestBody)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            if let errorStr = String(data: data, encoding: .utf8) {
-                print("Anthropic Error: \(errorStr)")
-            }
             throw AIError.apiError("Anthropic HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
         }
         
-        let anthropicResponse = try JSONDecoder().decode(AnthropicMessageResponse.self, from: data)
-        guard let text = anthropicResponse.content.first?.text else {
-            throw AIError.invalidResponse
+        // Very basic parse of Anthropic SSE
+        for try await line in bytes.lines {
+            guard !Task.isCancelled else { break }
+            if line.hasPrefix("data: ") {
+                let dataStr = String(line.dropFirst(6))
+                if let data = dataStr.data(using: .utf8),
+                   let streamEvent = try? JSONDecoder().decode(AnthropicStreamEvent.self, from: data) {
+                    if streamEvent.type == "content_block_delta", let text = streamEvent.delta?.text {
+                        continuation.yield(text)
+                    }
+                }
+            }
         }
-        return text
     }
 }
 
@@ -550,6 +620,26 @@ struct OpenAIChoice: Codable {
     let message: OpenAIChatMessage
 }
 
+// MARK: - OpenAI Streaming Models
+
+struct OpenAIChatStreamRequest: Codable {
+    let model: String
+    let messages: [OpenAIChatMessage]
+    let stream: Bool
+}
+
+struct OpenAIChatStreamResponse: Codable {
+    let choices: [OpenAIStreamChoice]
+}
+
+struct OpenAIStreamChoice: Codable {
+    let delta: OpenAIStreamDelta
+}
+
+struct OpenAIStreamDelta: Codable {
+    let content: String?
+}
+
 // MARK: - Anthropic Models
 
 struct AnthropicMessageRequest: Codable {
@@ -569,4 +659,23 @@ struct AnthropicMessageResponse: Codable {
 
 struct AnthropicContent: Codable {
     let text: String
+}
+
+// MARK: - Anthropic Streaming Models
+
+struct AnthropicMessageStreamRequest: Codable {
+    let model: String
+    let max_tokens: Int
+    let messages: [AnthropicMessage]
+    let stream: Bool
+}
+
+struct AnthropicStreamEvent: Codable {
+    let type: String
+    let delta: AnthropicStreamDelta?
+}
+
+struct AnthropicStreamDelta: Codable {
+    let type: String?
+    let text: String?
 }

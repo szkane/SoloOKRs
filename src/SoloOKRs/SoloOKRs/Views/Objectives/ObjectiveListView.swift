@@ -21,6 +21,7 @@ struct ObjectiveListView: View {
     // AI Analysis State
     @State private var analysisResult: String?
     @State private var isAnalyzing = false
+    @State private var analysisTask: Task<Void, Never>?
     @State private var showingAnalysisSheet = false
     @State private var selectedObjectiveForAnalysis: Objective?
     @State private var showingReviewSheet: Objective?
@@ -49,12 +50,7 @@ struct ObjectiveListView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Picker("", selection: $selectedTab) {
-                ForEach(ObjectiveTab.allCases, id: \.self) { tab in
-                    Text(LocalizedStringKey(tab.rawValue))
-                }
-            }
-            .pickerStyle(.segmented)
+            ObjectiveTabSegmentedControl(selection: $selectedTab)
             .padding(.horizontal)
             .padding(.vertical, 8)
             
@@ -75,10 +71,21 @@ struct ObjectiveListView: View {
                         objective: objective,
                         selectedObjective: $selectedObjective,
                         onAnalyze: {
-                            Task { await analyzeObjective(objective) }
+                            analyzeObjective(objective)
                         }
                     )
                     .tag(objective)
+                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                        Button {
+                            analyzeObjective(objective)
+                        } label: {
+                            Label("Analyze with AI", systemImage: "sparkles")
+                        }
+                        .tint(.indigo)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        swipeActionsContent(for: objective)
+                    }
                     .contextMenu {
                         contextMenuContent(for: objective)
                     }
@@ -88,22 +95,14 @@ struct ObjectiveListView: View {
         }
         .navigationTitle("Objectives")
 
-        // Bottom bar: Add Objective only
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 0) {
-                Divider()
-                HStack {
-                    Spacer()
-                    
-                    Button {
-                        showingAddSheet = true
-                    } label: {
-                        Label("Add Objective", systemImage: "plus.circle.fill")
-                            .font(.headline)
-                    }
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    showingAddSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .help("Add Objective")
                 }
-                .padding()
-                .background(.regularMaterial)
             }
         }
 
@@ -145,12 +144,27 @@ struct ObjectiveListView: View {
                 }
                 .navigationTitle("AI Analysis")
                 .toolbar {
+                    if isAnalyzing {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(role: .destructive) {
+                                analysisTask?.cancel()
+                                isAnalyzing = false
+                            } label: {
+                                Label("Stop", systemImage: "stop.circle.fill")
+                                    .foregroundColor(.red)
+                            }
+                        }
+                    }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done") { showingAnalysisSheet = false }
                     }
                 }
             }
             .frame(minWidth: 500, minHeight: 500)
+            .onDisappear {
+                analysisTask?.cancel()
+                isAnalyzing = false
+            }
         }
         .onChange(of: selectedObjective) { _, _ in
             selectedKeyResult = nil
@@ -168,9 +182,7 @@ struct ObjectiveListView: View {
     @ViewBuilder
     private func contextMenuContent(for objective: Objective) -> some View {
         Button {
-            Task {
-                await analyzeObjective(objective)
-            }
+            analyzeObjective(objective)
         } label: {
             Label("Analyze with AI", systemImage: "sparkles")
         }
@@ -214,21 +226,73 @@ struct ObjectiveListView: View {
             Button("Archive", role: .destructive) {
                 archiveObjective(objective)
             }
+            .disabled(objective.status == .active && canMarkAsAchieved(objective))
+        }
+        
+        if objective.status == .active {
+            Divider()
+            
+            let canAchieve = canMarkAsAchieved(objective)
+            
+            Button {
+                markAsAchieved(objective)
+            } label: {
+                Label("Mark as Achieved", systemImage: "trophy")
+            }
+            .disabled(!canAchieve)
         }
     }
     
-    private func analyzeObjective(_ objective: Objective) async {
-        selectedObjectiveForAnalysis = objective
-        isAnalyzing = true
-        do {
-            let result = try await AIService.shared.analyzeOKR(objective)
-            analysisResult = result
-            showingAnalysisSheet = true
-        } catch {
-            analysisResult = "### Analysis Failed\n\n**Error details:** \(error.localizedDescription)\n\nPlease check your AI Settings and ensure the selected provider/model is available."
-            showingAnalysisSheet = true
+    // MARK: - Achieved Logic
+    private func canMarkAsAchieved(_ objective: Objective) -> Bool {
+        // Needs review history
+        if objective.reviews.isEmpty { return false }
+        
+        // All tasks must be completed
+        for kr in objective.keyResults {
+            for task in kr.tasks {
+                if !task.isCompleted {
+                    return false
+                }
+            }
         }
-        isAnalyzing = false
+        
+        return true
+    }
+    
+    private func markAsAchieved(_ objective: Objective) {
+        withAnimation {
+            objective.status = .achieved
+            objective.updatedAt = Date()
+            selectedTab = .achieved
+        }
+    }
+    
+    private func analyzeObjective(_ objective: Objective) {
+        selectedObjectiveForAnalysis = objective
+        analysisResult = ""
+        isAnalyzing = true
+        showingAnalysisSheet = true
+        
+        analysisTask?.cancel()
+        analysisTask = Task {
+            do {
+                let stream = AIService.shared.analyzeOKRStream(objective)
+                for try await chunk in stream {
+                    guard !Task.isCancelled else { break }
+                    if analysisResult == nil {
+                        analysisResult = chunk
+                    } else {
+                        analysisResult? += chunk
+                    }
+                }
+            } catch {
+                if !Task.isCancelled {
+                    analysisResult = (analysisResult ?? "") + "\n\n### Analysis Failed\n\n**Error details:** \(error.localizedDescription)\n\nPlease check your AI Settings and ensure the selected provider/model is available."
+                }
+            }
+            isAnalyzing = false
+        }
     }
     
     private func promoteToActive(_ objective: Objective) {
@@ -247,6 +311,80 @@ struct ObjectiveListView: View {
             if selectedObjective == objective {
                 selectedObjective = nil
             }
+        }
+    }
+    
+    private func unarchiveObjective(_ objective: Objective) {
+        withAnimation {
+            objective.status = .draft
+            objective.archivedAt = nil
+            objective.updatedAt = Date()
+        }
+    }
+    
+    @ViewBuilder
+    private func swipeActionsContent(for objective: Objective) -> some View {
+        switch objective.status {
+        case .draft:
+            Button(role: .destructive) {
+                archiveObjective(objective)
+            } label: {
+                Label("Archive", systemImage: "archivebox")
+            }
+            
+            Button {
+                promoteToActive(objective)
+            } label: {
+                Label("Active", systemImage: "arrow.up.circle")
+            }
+            .tint(.green)
+            
+        case .active, .review:
+            let canAchieve = canMarkAsAchieved(objective)
+            
+            Button {
+                showingReviewSheet = objective
+            } label: {
+                Label("Review", systemImage: "calendar.badge.plus")
+            }
+            .tint(.teal)
+
+            if !objective.reviews.isEmpty {
+                Button {
+                    showingReviewHistory = objective
+                } label: {
+                    Label("History", systemImage: "clock")
+                }
+                .tint(.blue)
+            }
+            
+            if !canAchieve {
+                Button(role: .destructive) {
+                    archiveObjective(objective)
+                } label: {
+                    Label("Archive", systemImage: "archivebox")
+                }
+            }
+            
+            if canAchieve {
+                Button {
+                    markAsAchieved(objective)
+                } label: {
+                    Label("Achieved", systemImage: "trophy")
+                }
+                .tint(.orange)
+            }
+            
+        case .archived:
+            Button {
+                unarchiveObjective(objective)
+            } label: {
+                Label("Unarchive", systemImage: "arrow.uturn.backward")
+            }
+            .tint(.blue)
+            
+        case .achieved:
+            EmptyView()
         }
     }
 }
@@ -268,66 +406,58 @@ struct ObjectiveRowView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(objective.title)
-                    .font(.headline)
-                
-                Spacer()
-                
-                // Magnifying glass button for draft objectives (analyze)
-                if objective.status == .draft, let onAnalyze = onAnalyze {
-                    Button {
-                        onAnalyze()
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(isSelected ? .white.opacity(0.8) : .blue)
-                            .padding(4)
-                            .background(
-                                RoundedRectangle(cornerRadius: 5)
-                                    .fill(isSelected ? .white.opacity(0.2) : Color.blue.opacity(0.1))
-                            )
+        HStack(alignment: .top, spacing: 12) {
+            CircularProgressView(
+                progress: objective.progress,
+                color: color(for: objective.status)
+            )
+            .frame(width: 44, height: 44)
+            .padding(.top, 2)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(objective.title)
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    if ReviewModeManager.shared.isInReviewMode && (objective.status == .active || objective.status == .review) {
+                        Image(systemName: "pencil")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
                     }
-                    .buttonStyle(.plain)
-                    .help("Analyze with AI")
                 }
                 
-                if ReviewModeManager.shared.isInReviewMode && (objective.status == .active || objective.status == .review) {
-                    Image(systemName: "pencil")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                if !objective.objectiveDescription.isEmpty {
+                    Text(objective.objectiveDescription)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
                 
-                Text("\(Int(objective.progress * 100))%")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .contentTransition(.numericText())
-                    .animation(.spring(duration: 0.3), value: objective.progress)
-            }
-            
-            if !objective.objectiveDescription.isEmpty {
-                Text(objective.objectiveDescription)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            
-            HStack {
-                Text("\(objective.keyResults.count) Key Results")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                Spacer()
-                if objective.isOverdue {
-                    Label("Overdue", systemImage: "exclamationmark.circle")
+                HStack {
+                    Text("\(objective.keyResults.count) Key Results")
                         .font(.caption2)
-                        .foregroundStyle(.red)
-                        .symbolEffect(.pulse, options: .repeating, value: isOverduePulsing)
-                        .onAppear { isOverduePulsing = true }
+                        .foregroundStyle(.tertiary)
+                    Spacer()
+                    if objective.isOverdue {
+                        Label("Overdue", systemImage: "exclamationmark.circle")
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                            .symbolEffect(.pulse, options: .repeating, value: isOverduePulsing)
+                            .onAppear { isOverduePulsing = true }
+                    }
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
+        .background(
+            VStack {
+                Spacer()
+                Divider()
+            }
+        )
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
             if canEdit {
@@ -348,6 +478,42 @@ struct ObjectiveRowView: View {
         }
         .sheet(isPresented: $showingEditSheet) {
             EditObjectiveView(objective: objective)
+        }
+    }
+    
+    private func color(for status: OKRStatus) -> Color {
+        switch status {
+        case .draft: return Color(red: 0.00, green: 0.48, blue: 1.00)
+        case .active: return Color(red: 0.20, green: 0.80, blue: 0.20)
+        case .achieved: return Color(red: 1.00, green: 0.58, blue: 0.00)
+        case .archived: return Color(red: 0.69, green: 0.32, blue: 0.87)
+        case .review: return Color(red: 0.20, green: 0.80, blue: 0.20) // Same as active
+        }
+    }
+}
+
+struct CircularProgressView: View {
+    let progress: Double
+    let color: Color
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(
+                    color.opacity(0.3),
+                    lineWidth: 4
+                )
+            Circle()
+                .trim(from: 0, to: max(0, min(1, progress)))
+                .stroke(
+                    color,
+                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+            
+            Text(String(format: "%.0f%%", progress * 100))
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundColor(color)
         }
     }
 }

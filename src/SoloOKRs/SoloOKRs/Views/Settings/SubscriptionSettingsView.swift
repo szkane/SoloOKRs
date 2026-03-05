@@ -5,11 +5,14 @@
 
 import SwiftUI
 import StoreKit
+import SwiftData
 
 struct SubscriptionSettingsView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var manager = SubscriptionManager.shared
     @State private var showingError = false
     @State private var isPurchasing = false
+    @State private var showingClearConfirmation = false
     
     var body: some View {
         Form {
@@ -85,6 +88,19 @@ struct SubscriptionSettingsView: View {
                 }
                 .disabled(manager.isLoading)
             }
+            
+            // Danger Zone
+            Section("Danger Zone") {
+                Button(role: .destructive) {
+                    showingClearConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text("Delete All App Data")
+                    }
+                    .foregroundStyle(.red)
+                }
+            }
         }
         .formStyle(.grouped)
         .navigationTitle("Subscription")
@@ -95,6 +111,25 @@ struct SubscriptionSettingsView: View {
         }
         .onChange(of: manager.errorMessage) { _, newValue in
             showingError = newValue != nil
+        }
+        .confirmationDialog("Clear All Data?", isPresented: $showingClearConfirmation, titleVisibility: .visible) {
+            Button("Delete All Objectives, Key Results & Tasks", role: .destructive) {
+                clearAllData()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will permanently delete all your OKR data. This action cannot be undone.")
+        }
+    }
+    
+    private func clearAllData() {
+        DispatchQueue.main.async {
+            do {
+                try modelContext.delete(model: Objective.self)
+                try modelContext.save()
+            } catch {
+                manager.errorMessage = "Failed to clear data: \(error.localizedDescription)"
+            }
         }
     }
     

@@ -13,7 +13,9 @@ struct ContentView: View {
     @State private var selectedObjective: Objective?
     @State private var selectedKeyResult: KeyResult?
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
-    @State private var showingClearConfirmation = false
+    
+    @Environment(\.openSettings) private var openSettings
+    @AppStorage("selectedSettingsTab") private var selectedTab: String = "general"
     
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -48,68 +50,44 @@ struct ContentView: View {
             }
         }
         .toolbar {
-            #if DEBUG
             ToolbarItem(placement: .automatic) {
-                Button(role: .destructive) {
-                    showingClearConfirmation = true
+                Button {
+                    selectedTab = "ai"
+                    try? openSettings()
                 } label: {
-                    Label("Clear All Data", systemImage: "trash")
-                        .foregroundStyle(.red)
+                    Image(systemName: "brain")
+                        .foregroundStyle(AIService.shared.isConfigured ? .green : .secondary)
                 }
+                .help("AI Settings")
             }
-            #endif
-            
+
             ToolbarItem(placement: .automatic) {
-                HStack(spacing: 12) {
-                    // AI Status
-                    if AIService.shared.isConfigured {
-                        Label("AI Ready", systemImage: "brain")
-                            .foregroundStyle(.green)
-                    }
+                Button {
+                    selectedTab = "mcp"
+                    try? openSettings()
+                } label: {
+                    Image(systemName: "network")
+                        .foregroundStyle(MCPServer.shared.isRunning ? .green : .secondary)
+                }
+                .help("MCP Settings")
+            }
 
-                    // MCP Status
-                    if MCPServer.shared.isRunning {
-                        Label("MCP", systemImage: "network")
-                            .foregroundStyle(.green)
-                    }
-
-                    // Sync Status
-                    Label("Synced", systemImage: "icloud.fill")
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    selectedTab = "sync"
+                    try? openSettings()
+                } label: {
+                    Image(systemName: "icloud.fill")
                         .foregroundStyle(.green)
                 }
-                .font(.caption)
+                .help("Sync Settings")
             }
-        }
-        .confirmationDialog("Clear All Data?", isPresented: $showingClearConfirmation, titleVisibility: .visible) {
-            Button("Delete All Objectives, Key Results & Tasks", role: .destructive) {
-                clearAllData()
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This will permanently delete all your OKR data. This action cannot be undone.")
         }
         .frame(minWidth: 900, minHeight: 600)
         .onChange(of: selectedObjective) { _, newValue in
             // Clear key result selection when objective changes
             if newValue != selectedObjective {
                 selectedKeyResult = nil
-            }
-        }
-    }
-    
-    private func clearAllData() {
-        // 1. Clear selection state immediately to reset UI
-        selectedKeyResult = nil
-        selectedObjective = nil
-        
-        // 2. Perform batch deletion after a brief delay
-        // Using batch delete avoids accessing individual object instances that might be in a state of flux
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            do {
-                try modelContext.delete(model: Objective.self)
-                try modelContext.save()
-            } catch {
-                print("Failed to clear data: \(error)")
             }
         }
     }

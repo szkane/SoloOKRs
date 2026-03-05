@@ -31,16 +31,14 @@ struct KeyResultListView: View {
             }
         }
         .navigationTitle(objective.title)
-        // Toolbar buttons removed as per request
-        // .toolbar { ... }
-        .safeAreaInset(edge: .top) {
-            HStack {
-                Spacer()
-                Button(LocalizedStringKey("Add Key Result"), systemImage: "plus") {
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
                     showingAddSheet = true
+                } label: {
+                    Image(systemName: "widget.small.badge.plus")
+                        .help(LocalizedStringKey("Add Key Result"))
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
                 .disabled(!objective.isEditable)
             }
         }

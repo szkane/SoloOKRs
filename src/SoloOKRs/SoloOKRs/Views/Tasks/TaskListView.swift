@@ -19,16 +19,16 @@ struct TaskListView: View {
             }
         }
         .navigationTitle(keyResult.title)
-        .safeAreaInset(edge: .top) {
-            HStack {
-                Spacer()
-                Button("Add Task", systemImage: "plus") {
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
                     addingKeyResultID = keyResult.id.uuidString
                     openWindow(id: "addTask")
+                } label: {
+                    Image(systemName: "checkmark.circle.badge.plus")
+                        .help("Add Task")
                 }
-                .buttonStyle(.borderedProminent)
                 .disabled(!ReviewModeManager.shared.canEditTask(for: keyResult))
-                .padding()
             }
         }
     }

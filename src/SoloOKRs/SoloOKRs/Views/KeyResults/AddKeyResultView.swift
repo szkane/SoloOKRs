@@ -21,6 +21,7 @@ struct AddKeyResultView: View {
     @State private var evaluationResult: String?
     @State private var showingEvaluation = false
     @State private var isEvaluating = false
+    @State private var evaluationTask: Task<Void, Never>?
     
     var body: some View {
         NavigationStack {
@@ -39,9 +40,7 @@ struct AddKeyResultView: View {
                 
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        Task {
-                            await evaluateKR()
-                        }
+                        evaluateKR()
                     } label: {
                         if isEvaluating {
                             ProgressView()
@@ -74,12 +73,27 @@ struct AddKeyResultView: View {
                     }
                     .navigationTitle(LocalizedStringKey("KR Evaluation"))
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
+                        if isEvaluating {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button(role: .destructive) {
+                                    evaluationTask?.cancel()
+                                    isEvaluating = false
+                                } label: {
+                                    Label(LocalizedStringKey("Stop"), systemImage: "stop.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
                             Button(LocalizedStringKey("Close")) { showingEvaluation = false }
                         }
                     }
                 }
                 .frame(minWidth: 450, minHeight: 400)
+                .onDisappear {
+                    evaluationTask?.cancel()
+                    isEvaluating = false
+                }
             }
         }
         .frame(minWidth: 400, minHeight: 180)
@@ -88,20 +102,33 @@ struct AddKeyResultView: View {
         }
     }
     
-    private func evaluateKR() async {
+    private func evaluateKR() {
+        evaluationResult = ""
         isEvaluating = true
-        do {
-            let result = try await AIService.shared.evaluateKeyResult(
-                krTitle: title,
-                objectiveTitle: objective.title
-            )
-            evaluationResult = result
-            showingEvaluation = true
-        } catch {
-            evaluationResult = "### Evaluation Failed\n\n**Error:** \(error.localizedDescription)\n\nPlease check your AI Settings."
-            showingEvaluation = true
+        showingEvaluation = true
+        
+        evaluationTask?.cancel()
+        evaluationTask = Task {
+            do {
+                let stream = AIService.shared.evaluateKeyResultStream(
+                    krTitle: title,
+                    objectiveTitle: objective.title
+                )
+                for try await chunk in stream {
+                    guard !Task.isCancelled else { break }
+                    if evaluationResult == nil {
+                        evaluationResult = chunk
+                    } else {
+                        evaluationResult? += chunk
+                    }
+                }
+            } catch {
+                if !Task.isCancelled {
+                    evaluationResult = (evaluationResult ?? "") + "\n\n### Evaluation Failed\n\n**Error:** \(error.localizedDescription)\n\nPlease check your AI Settings."
+                }
+            }
+            isEvaluating = false
         }
-        isEvaluating = false
     }
     
     private func addKeyResult() {
