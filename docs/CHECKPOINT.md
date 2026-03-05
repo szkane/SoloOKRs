@@ -1,6 +1,6 @@
-> **Last Session:** 2026-03-04 14:18
+> **Last Session:** 2026-03-05 08:50
 > **Current Phase:** Post-Beta Improvements + User Feedback 🛠️  
-> **Build Status:** ✅ (verified 2026-03-04 14:18)
+> **Build Status:** ✅ (verified 2026-03-05 08:50)
 
 ---
 
@@ -44,6 +44,7 @@ All core phases complete:
 - [x] **MCP Unix Domain Socket Transport:** Added UDS transport with `MCPTransportType` picker, `NIOUDSServer`, `UDSChannelHandler` (stdio protocol). Verified end-to-end.
 - [x] **App Icon:** Designed Apple-style flat app icon and generated macOS sizes.
 - [x] **Multilingual Support:** Implemented 8 new languages via String Catalog and translation generation.
+- [x] **AI Provider Configuration & Integrations:** Refactored settings, introduced OpenAI-compatible API endpoints for Custom/LM Studio/Anthropic, and added secure keychain storage UI notices with 8-language translations.
 
 ---
 
@@ -74,6 +75,7 @@ None.
 
 | Date       | Summary                                                                                                                                                                                                                                                                                                                          |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-05 | **AI Provider Configuration & Integrations:** Refactored API settings to use non-dropdown models lists, added OpenAI-compatible endpoint support (Custom/LM Studio/Anthropic), fixed Observable UI state updates, and implemented secure keychain local storage UI notices with 8-language translations. Build ✅                |
 | 2026-03-04 | **Workflows & Skills:** Cleaned up `.agent` folder structure, symlinked 5 advanced skills (superpowers, debugging, code review, branch finishing), and embedded them into `/init` and `/sync` workflows. Build ✅                                                                                                                |
 | 2026-02-20 | **Bug Fix:** Fixed in-app language switcher by injecting `preferredLanguage` AppStorage value into `\.locale` environment at `SoloOKRsApp` root level. Added missing languages to Settings Picker. Build ✅                                                                                                                      |
 | 2026-02-20 | **Multilingual Support:** Added 8 new languages (zh-Hans, zh-Hant, ja, ko, de, fr, es, pt-BR) to `Localizable.xcstrings` and updated Xcode `knownRegions`. Compiled 1536 translated strings. Build ✅                                                                                                                            |
