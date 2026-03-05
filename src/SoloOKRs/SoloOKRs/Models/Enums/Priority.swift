@@ -12,7 +12,7 @@ enum Priority: Int, Codable, CaseIterable, Comparable {
     case high = 2
     case urgent = 1
     
-    var displayName: String {
+    var displayName: LocalizedStringResource {
         switch self {
         case .low: return "Low"
         case .medium: return "Medium"

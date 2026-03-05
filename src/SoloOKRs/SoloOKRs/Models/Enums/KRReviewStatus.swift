@@ -7,10 +7,19 @@ import Foundation
 import SwiftUI
 
 enum KRReviewStatus: String, Codable, CaseIterable {
-    case onTrack = "On Track"
-    case atRisk = "At Risk"
-    case offTrack = "Off Track"
-    case blocked = "Blocked"
+    case onTrack = "onTrack"
+    case atRisk = "atRisk"
+    case offTrack = "offTrack"
+    case blocked = "blocked"
+    
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .onTrack: return "On Track"
+        case .atRisk: return "At Risk"
+        case .offTrack: return "Off Track"
+        case .blocked: return "Blocked"
+        }
+    }
     
     var icon: String {
         switch self {

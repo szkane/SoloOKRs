@@ -27,7 +27,7 @@ struct EditTaskWindowView: View {
                     dismiss()
                 })
             } else {
-                ContentUnavailableView("No Task Selected", systemImage: "doc.questionmark")
+                ContentUnavailableView(LocalizedStringKey("No Task Selected"), systemImage: "doc.questionmark")
             }
         }
         .frame(minWidth: 900, minHeight: 600)
@@ -44,24 +44,24 @@ struct EditTaskContent: View {
             Form {
                 if !task.isEditable {
                     Section {
-                        Label("Read Only", systemImage: "lock.fill")
+                        Label(LocalizedStringKey("Read Only"), systemImage: "lock.fill")
                             .foregroundStyle(.secondary)
                     }
                 }
                 
-                Section("Title") {
+                Section(LocalizedStringKey("Title")) {
                     TextField("", text: $task.title)
                         .font(.title3)
                 }
                 .disabled(!task.isEditable)
                 
-                Section("Status") {
-                    Toggle("Completed", isOn: $task.isCompleted)
+                Section(LocalizedStringKey("Status")) {
+                    Toggle(LocalizedStringKey("Completed"), isOn: $task.isCompleted)
                 }
                 .disabled(!task.isEditable)
                 
-                Section("Priority") {
-                    Picker("Priority", selection: $task.priority) {
+                Section(LocalizedStringKey("Priority")) {
+                    Picker(LocalizedStringKey("Priority"), selection: $task.priority) {
                         ForEach(Priority.allCases, id: \.self) { priority in
                             Label(priority.displayName, systemImage: priority.icon)
                                 .foregroundColor(priority.color)
@@ -71,13 +71,13 @@ struct EditTaskContent: View {
                 }
                 .disabled(!task.isEditable)
                 
-                Section("Due Date") {
-                    DatePicker("Due Date", selection: Binding(
+                Section(LocalizedStringKey("Due Date")) {
+                    DatePicker(LocalizedStringKey("Due Date"), selection: Binding(
                         get: { task.dueDate ?? Date() },
                         set: { task.dueDate = $0 }
                     ), displayedComponents: .date)
                     
-                    Button("Clear Due Date") {
+                    Button(LocalizedStringKey("Clear Due Date")) {
                         task.dueDate = nil
                     }
                     .disabled(task.dueDate == nil)
@@ -89,20 +89,20 @@ struct EditTaskContent: View {
             
             // RIGHT: Markdown Notes Editor
             VStack(alignment: .leading, spacing: 0) {
-                Text("Notes")
+                Text(LocalizedStringKey("Notes"))
                     .font(.headline)
                     .padding()
                 
                 if task.isEditable {
                     MarkdownEditorView(
                         text: $task.taskDescription,
-                        placeholder: "Add notes (Markdown supported)..."
+                        placeholder: String(localized: "Add notes (Markdown supported)...")
                     )
                     .frame(maxHeight: .infinity)
                 } else {
                     ScrollView {
                         if task.taskDescription.isEmpty {
-                            Text("No notes")
+                            Text(LocalizedStringKey("No notes"))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         } else {
@@ -119,12 +119,12 @@ struct EditTaskContent: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button(LocalizedStringKey("Cancel")) {
                     onDone()
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
+                Button(LocalizedStringKey("Done")) {
                     task.updatedAt = Date()
                     onDone()
                 }

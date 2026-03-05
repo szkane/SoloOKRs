@@ -20,14 +20,14 @@ struct EditKeyResultView: View {
                     }
                 }
                 
-                Section("Details") {
-                    TextField("Title", text: $keyResult.title)
+                Section(LocalizedStringKey("Details")) {
+                    TextField(LocalizedStringKey("Title"), text: $keyResult.title)
                 }
                 .disabled(!keyResult.isEditable)
                 
 
                 
-                Section("Progress") {
+                Section(LocalizedStringKey("Progress")) {
                     let completedCount = keyResult.tasks.filter { $0.isCompleted }.count
                     let totalCount = keyResult.tasks.count
                     
@@ -38,7 +38,7 @@ struct EditKeyResultView: View {
                                 .font(.system(size: 36, weight: .bold, design: .rounded))
                                 .contentTransition(.numericText())
                             
-                            Text("tasks completed")
+                            Text(LocalizedStringKey("tasks completed"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -52,39 +52,12 @@ struct EditKeyResultView: View {
                         .clipShape(.rect(cornerRadius: 4))
                 }
                 // Progress is derived, so no manual editing here anyway except maybe adding tasks (which is separate)
-                
-                Section("Self Score (Review Mode)") {
-                    HStack {
-                        Text("Score")
-                        Spacer()
-                        Text(keyResult.selfScore != nil ? "\(keyResult.selfScore!)" : "Not Set")
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    Slider(
-                        value: Binding(
-                            get: { Double(keyResult.selfScore ?? 50) },
-                            set: { keyResult.selfScore = Int($0) }
-                        ),
-                        in: 0...100,
-                        step: 1
-                    )
-                    .tint(.orange)
-                    .disabled(!ReviewModeManager.shared.isInReviewMode) // Only editable in Review Mode specifically?
-                    // Actually, if keyResult.isEditable is true, we are either in Draft (ok) or Active+ReviewMode (ok)
-                    // But Self Score implies it's for Review.
-                    // Let's stick to keyResult.isEditable for consistency, OR specific ReviewMode check?
-                    // "Self Score (Review Mode)" suggests it's a review features.
-                    // If in Draft, maybe we shouldn't set score?
-                    // But Draft is editable.
-                }
-                .disabled(!keyResult.isEditable)
             }
             .formStyle(.grouped)
-            .navigationTitle("Edit Key Result")
+            .navigationTitle(LocalizedStringKey("Edit Key Result"))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(LocalizedStringKey("Done")) {
                         keyResult.updatedAt = Date()
                         dismiss()
                     }

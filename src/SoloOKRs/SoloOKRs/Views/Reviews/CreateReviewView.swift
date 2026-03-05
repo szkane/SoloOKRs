@@ -2,7 +2,7 @@
 // SoloOKRs
 //
 // Form to create a new review for a specific Objective.
-// Redesigned 2026-03-05: Card-based layout with step-by-step flow.
+// Updated 2026-03-05: Chip pickers, task counts, status banner, i18n.
 
 import SwiftUI
 import SwiftData
@@ -23,6 +23,8 @@ struct CreateReviewView: View {
         let id: UUID
         let krTitle: String
         let keyResult: KeyResult
+        var completedTasks: Int = 0
+        var totalTasks: Int = 0
         var currentValue: Double = 0
         var targetValue: Double = 100
         var completionPercent: Double = 0
@@ -39,19 +41,14 @@ struct CreateReviewView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // ─── Step 1: Review Type ───
                     reviewTypeCard
-                    
-                    // ─── Step 2: KR Entries ───
                     krEntriesSection
-                    
-                    // ─── Step 3: Overall Notes ───
                     overallNotesCard
                 }
                 .padding(20)
             }
             .background(Color(nsColor: .windowBackgroundColor))
-            .navigationTitle("New Review — \(objective.title)")
+            .navigationTitle(Text("New Review — \(objective.title)"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -71,32 +68,28 @@ struct CreateReviewView: View {
         .frame(minWidth: 640, minHeight: 600)
         .onAppear {
             populateKREntries()
-            // Auto-expand the first KR
             if let first = krEntries.first {
                 expandedKR = first.id
             }
         }
     }
     
-    // MARK: - Step 1: Review Type
+    // MARK: - Review Type Card
     
     private var reviewTypeCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Review Type", systemImage: "calendar")
                 .font(.headline)
-                .foregroundStyle(.primary)
             
             HStack(spacing: 8) {
                 ForEach(ReviewType.allCases, id: \.self) { type in
                     Button {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            reviewType = type
-                        }
+                        withAnimation(.easeInOut(duration: 0.15)) { reviewType = type }
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: type.icon)
                                 .font(.caption)
-                            Text(type.rawValue)
+                            Text(type.displayName)
                                 .font(.subheadline)
                         }
                         .padding(.horizontal, 14)
@@ -120,16 +113,14 @@ struct CreateReviewView: View {
         .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
     }
     
-    // MARK: - Step 2: KR Entries
+    // MARK: - KR Entries Section
     
     private var krEntriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Label("Key Results", systemImage: "list.bullet.circle")
                     .font(.headline)
-                
                 Spacer()
-                
                 Text("\(krEntries.count) items")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
@@ -165,7 +156,7 @@ struct CreateReviewView: View {
         let isExpanded = expandedKR == entry.wrappedValue.id
         
         return VStack(spacing: 0) {
-            // Header (always visible)
+            // Header
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     expandedKR = isExpanded ? nil : entry.wrappedValue.id
@@ -176,14 +167,24 @@ struct CreateReviewView: View {
                         .foregroundStyle(entry.wrappedValue.status.color)
                         .font(.system(size: 16))
                     
-                    Text(entry.wrappedValue.krTitle)
-                        .font(.system(.body, weight: .medium))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(entry.wrappedValue.krTitle)
+                            .font(.system(.body, weight: .medium))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        
+                        // Task count
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.square")
+                                .font(.caption2)
+                            Text("\(entry.wrappedValue.completedTasks)/\(entry.wrappedValue.totalTasks) Tasks")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
+                    }
                     
                     Spacer()
                     
-                    // Quick metrics badge
                     if entry.wrappedValue.currentValue > 0 || entry.wrappedValue.targetValue != 100 {
                         Text("\(formatNumber(entry.wrappedValue.currentValue))/\(formatNumber(entry.wrappedValue.targetValue))")
                             .font(.caption.monospacedDigit())
@@ -204,16 +205,21 @@ struct CreateReviewView: View {
             
             // Expanded content
             if isExpanded {
-                Divider()
-                    .padding(.horizontal, 14)
+                Divider().padding(.horizontal, 14)
                 
                 VStack(spacing: 16) {
-                    // Row 1: Metrics + Status
                     metricsRow(entry: entry)
                     
                     Divider()
                     
-                    // Row 2: Text fields (stacked)
+                    // Status & Trend chips
+                    statusAndTrendChips(entry: entry)
+                    
+                    // Status banner (prominent icon + label)
+                    statusBanner(entry: entry)
+                    
+                    Divider()
+                    
                     textFieldsGroup(entry: entry)
                 }
                 .padding(14)
@@ -233,19 +239,17 @@ struct CreateReviewView: View {
     
     private func metricsRow(entry: Binding<KREntryDraft>) -> some View {
         HStack(spacing: 16) {
-            // Current Value
             metricField("Current", value: entry.currentValue)
                 .onChange(of: entry.wrappedValue.currentValue) { _, _ in
                     updateCompletion(entry: entry)
                 }
             
-            // Target Value
             metricField("Target", value: entry.targetValue)
                 .onChange(of: entry.wrappedValue.targetValue) { _, _ in
                     updateCompletion(entry: entry)
                 }
             
-            // Completion (read-only)
+            // Completion
             VStack(spacing: 4) {
                 Text("Done")
                     .font(.caption2)
@@ -258,44 +262,29 @@ struct CreateReviewView: View {
             }
             .frame(width: 55)
             
-            Divider()
-                .frame(height: 40)
+            Divider().frame(height: 40)
             
-            // Status picker
+            // Task progress
             VStack(spacing: 4) {
-                Text("Status")
+                Text("Tasks")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Picker("", selection: entry.status) {
-                    ForEach(KRReviewStatus.allCases, id: \.self) { s in
-                        Label(s.rawValue, systemImage: s.icon).tag(s)
-                    }
-                }
-                .labelsHidden()
-                .fixedSize()
+                Text("\(entry.wrappedValue.completedTasks)/\(entry.wrappedValue.totalTasks)")
+                    .font(.title3.bold().monospacedDigit())
+                    .foregroundStyle(
+                        entry.wrappedValue.totalTasks > 0 && entry.wrappedValue.completedTasks == entry.wrappedValue.totalTasks
+                        ? .green : .primary
+                    )
+                    .frame(height: 22)
             }
-            
-            // Trend picker
-            VStack(spacing: 4) {
-                Text("Trend")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Picker("", selection: entry.trend) {
-                    ForEach(ReviewTrend.allCases, id: \.self) { t in
-                        Label(t.rawValue, systemImage: t.icon).tag(t)
-                    }
-                }
-                .labelsHidden()
-                .fixedSize()
-            }
+            .frame(width: 55)
         }
     }
     
     private func metricField(_ label: String, value: Binding<Double>) -> some View {
         VStack(spacing: 4) {
-            Text(label)
+            Text(LocalizedStringKey(label))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -308,6 +297,119 @@ struct CreateReviewView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 6))
                 .frame(width: 70)
         }
+    }
+    
+    // MARK: - Status & Trend Chips
+    
+    private func statusAndTrendChips(entry: Binding<KREntryDraft>) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Status chips
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Status")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.secondary)
+                
+                HStack(spacing: 8) {
+                    ForEach(KRReviewStatus.allCases, id: \.self) { s in
+                        let isSelected = entry.wrappedValue.status == s
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                entry.wrappedValue.status = s
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: s.icon)
+                                    .font(.caption)
+                                Text(s.displayName)
+                                    .font(.subheadline)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(isSelected ? s.color : Color(nsColor: .controlBackgroundColor))
+                            .foregroundStyle(isSelected ? .white : .primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.15), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            
+            // Trend chips
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Trend")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.secondary)
+                
+                HStack(spacing: 8) {
+                    ForEach(ReviewTrend.allCases, id: \.self) { t in
+                        let isSelected = entry.wrappedValue.trend == t
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                entry.wrappedValue.trend = t
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: t.icon)
+                                    .font(.caption)
+                                Text(t.displayName)
+                                    .font(.subheadline)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(isSelected ? t.swiftUIColor : Color(nsColor: .controlBackgroundColor))
+                            .foregroundStyle(isSelected ? .white : .primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.15), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - Status Banner (Fix #3: prominent status icon after selection)
+    
+    private func statusBanner(entry: Binding<KREntryDraft>) -> some View {
+        let s = entry.wrappedValue.status
+        
+        return HStack(spacing: 10) {
+            Image(systemName: s.icon)
+                .font(.title2)
+                .foregroundStyle(s.color)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(s.displayName)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(s.color)
+                
+                if !entry.wrappedValue.statusReason.isEmpty {
+                    Text(entry.wrappedValue.statusReason)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+            
+            Spacer()
+            
+            Image(systemName: entry.wrappedValue.trend.icon)
+                .font(.title3)
+                .foregroundStyle(entry.wrappedValue.trend.swiftUIColor)
+        }
+        .padding(12)
+        .background(s.color.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
     
     // MARK: - Text Fields Group
@@ -354,16 +456,15 @@ struct CreateReviewView: View {
                 label: "Adjustments",
                 placeholder: "Changes to target or strategy...",
                 text: entry.adjustmentNotes,
-                color: .orange,
-                multiline: false
+                color: .orange
             )
         }
     }
     
     private func compactTextField(
         icon: String,
-        label: String,
-        placeholder: String,
+        label: LocalizedStringKey,
+        placeholder: LocalizedStringKey,
         text: Binding<String>,
         color: Color,
         multiline: Bool = false
@@ -392,7 +493,7 @@ struct CreateReviewView: View {
         }
     }
     
-    // MARK: - Step 3: Overall Notes
+    // MARK: - Overall Notes Card
     
     private var overallNotesCard: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -416,9 +517,7 @@ struct CreateReviewView: View {
     // MARK: - Helpers
     
     private func formatNumber(_ value: Double) -> String {
-        if value == value.rounded() {
-            return String(Int(value))
-        }
+        if value == value.rounded() { return String(Int(value)) }
         return String(format: "%.1f", value)
     }
     
@@ -426,10 +525,14 @@ struct CreateReviewView: View {
         krEntries = objective.keyResults
             .sorted { $0.order < $1.order }
             .map { kr in
-                KREntryDraft(
+                let totalTasks = kr.tasks.count
+                let completedTasks = kr.tasks.filter { $0.isCompleted }.count
+                return KREntryDraft(
                     id: kr.id,
                     krTitle: kr.title,
                     keyResult: kr,
+                    completedTasks: completedTasks,
+                    totalTasks: totalTasks,
                     completionPercent: kr.progress * 100
                 )
             }
@@ -473,7 +576,6 @@ struct CreateReviewView: View {
         
         objective.lastReviewedAt = Date()
         objective.updatedAt = Date()
-        
         dismiss()
     }
 }

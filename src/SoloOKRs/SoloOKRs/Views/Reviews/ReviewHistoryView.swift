@@ -8,6 +8,7 @@ import SwiftUI
 
 struct ReviewHistoryView: View {
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("preferredLanguage") private var preferredLanguage = ""
     let objective: Objective
     @State private var showingCreateReview = false
     
@@ -54,24 +55,25 @@ struct ReviewHistoryView: View {
             }
             .sheet(isPresented: $showingCreateReview) {
                 CreateReviewView(objective: objective)
+                    .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
             }
         }
-        .frame(minWidth: 520, minHeight: 400)
+        .frame(minWidth: 640, minHeight: 480)
     }
     
     // MARK: - Empty State
     
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) { // Increased spacing
             Image(systemName: "calendar.badge.plus")
-                .font(.system(size: 40))
+                .font(.system(size: 50)) // Increased font size
                 .foregroundStyle(.tertiary)
             
-            Text("No Reviews Yet")
-                .font(.title3.bold())
+            Text("Review History (\(objective.reviews.count))") // Changed text and font size
+                .font(.title2.bold())
             
             Text("Create your first review to start\ntracking progress on this Objective.")
-                .font(.subheadline)
+                .font(.body) // Increased font size
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             
@@ -131,12 +133,12 @@ struct ReviewHistoryView: View {
     }
     
     private func statBadge(_ value: String, label: String, color: Color) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             Text(value)
-                .font(.subheadline.bold())
+                .font(.body.bold())
                 .foregroundStyle(color)
             Text(label)
-                .font(.caption2)
+                .font(.subheadline)
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
@@ -150,23 +152,23 @@ struct ReviewHistoryView: View {
             ZStack {
                 Circle()
                     .fill((review.overallStatus?.color ?? .gray).opacity(0.12))
-                    .frame(width: 38, height: 38)
+                    .frame(width: 44, height: 44)
                 Image(systemName: review.overallStatus?.icon ?? "questionmark.circle")
                     .foregroundStyle(review.overallStatus?.color ?? .gray)
-                    .font(.system(size: 16))
+                    .font(.system(size: 20))
             }
             
             // Center: Info
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text(review.reviewType.rawValue)
-                        .font(.subheadline.bold())
+                    Text(review.reviewType.displayName)
+                        .font(.body.bold())
                     
                     if let status = review.overallStatus {
-                        Text(status.rawValue)
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
+                        Text(status.displayName)
+                            .font(.caption.bold())
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
                             .background(status.color.opacity(0.12))
                             .foregroundStyle(status.color)
                             .clipShape(Capsule())
@@ -178,7 +180,7 @@ struct ReviewHistoryView: View {
                         review.createdAt.formatted(date: .abbreviated, time: .shortened),
                         systemImage: "clock"
                     )
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                     
                     if !review.krEntries.isEmpty {
@@ -187,7 +189,7 @@ struct ReviewHistoryView: View {
                             ForEach(review.krEntries.sorted(by: { ($0.keyResult?.order ?? 0) < ($1.keyResult?.order ?? 0) })) { entry in
                                 Circle()
                                     .fill(entry.status.color)
-                                    .frame(width: 6, height: 6)
+                                    .frame(width: 8, height: 8)
                             }
                         }
                     }

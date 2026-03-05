@@ -27,7 +27,7 @@ struct AddTaskWindowView: View {
                     dismiss()
                 })
             } else {
-                ContentUnavailableView("No Key Result Selected", systemImage: "doc.questionmark")
+                ContentUnavailableView(LocalizedStringKey("No Key Result Selected"), systemImage: "doc.questionmark")
             }
         }
         .frame(minWidth: 900, minHeight: 600)
@@ -50,20 +50,20 @@ struct AddTaskContent: View {
         HSplitView {
             // LEFT: Basic Info Form
             Form {
-                Section("Title") {
+                Section(LocalizedStringKey("Title")) {
                     TextField("", text: $title)
                         .font(.title3)
                 }
                 
-                Section("Due Date") {
-                    Toggle("Set Due Date", isOn: $hasDueDate)
+                Section(LocalizedStringKey("Due Date")) {
+                    Toggle(LocalizedStringKey("Set Due Date"), isOn: $hasDueDate)
                     if hasDueDate {
-                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                        DatePicker(LocalizedStringKey("Due Date"), selection: $dueDate, displayedComponents: .date)
                     }
                 }
                 
-                Section("Priority") {
-                    Picker("Priority", selection: $priority) {
+                Section(LocalizedStringKey("Priority")) {
+                    Picker(LocalizedStringKey("Priority"), selection: $priority) {
                         ForEach(Priority.allCases, id: \.self) { priority in
                             Label(priority.displayName, systemImage: priority.icon)
                                 .tag(priority)
@@ -77,13 +77,13 @@ struct AddTaskContent: View {
             
             // RIGHT: Markdown Notes Editor
             VStack(alignment: .leading, spacing: 0) {
-                Text("Notes")
+                Text(LocalizedStringKey("Notes"))
                     .font(.headline)
                     .padding()
                 
                 MarkdownEditorView(
                     text: $description,
-                    placeholder: "Add notes (Markdown supported)..."
+                    placeholder: String(localized: "Add notes (Markdown supported)...")
                 )
                 .frame(maxHeight: .infinity)
                 .padding(.horizontal)
@@ -93,12 +93,12 @@ struct AddTaskContent: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button(LocalizedStringKey("Cancel")) {
                     onComplete()
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
+                Button(LocalizedStringKey("Save")) {
                     saveTask()
                     onComplete()
                 }

@@ -58,7 +58,7 @@ struct ReviewDetailView: View {
             }
             
             VStack(alignment: .leading, spacing: 3) {
-                Text(review.reviewType.rawValue)
+                Text(review.reviewType.displayName)
                     .font(.title3.bold())
                 
                 Text(review.createdAt.formatted(date: .long, time: .shortened))
@@ -73,7 +73,7 @@ struct ReviewDetailView: View {
                     Image(systemName: status.icon)
                         .font(.title2)
                         .foregroundStyle(status.color)
-                    Text(status.rawValue)
+                    Text(status.displayName)
                         .font(.caption2.bold())
                         .foregroundStyle(status.color)
                 }
@@ -119,7 +119,7 @@ struct ReviewDetailView: View {
                 
                 Spacer()
                 
-                Label(entry.status.rawValue, systemImage: entry.status.icon)
+                Label { Text(entry.status.displayName) } icon: { Image(systemName: entry.status.icon) }
                     .font(.caption.bold())
                     .foregroundStyle(entry.status.color)
                     .padding(.horizontal, 8)
@@ -137,13 +137,13 @@ struct ReviewDetailView: View {
                 
                 HStack(spacing: 4) {
                     Image(systemName: entry.trend.icon)
-                    Text(entry.trend.rawValue)
+                    Text(entry.trend.displayName)
                 }
                 .font(.caption.bold())
-                .foregroundStyle(trendColor(entry.trend))
+                .foregroundStyle(entry.trend.swiftUIColor)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(trendColor(entry.trend).opacity(0.08))
+                .background(entry.trend.swiftUIColor.opacity(0.08))
                 .clipShape(Capsule())
                 .frame(maxWidth: .infinity)
             }
@@ -184,7 +184,7 @@ struct ReviewDetailView: View {
     
     // MARK: - Helpers
     
-    private func metricPill(_ label: String, value: String, color: Color = .primary) -> some View {
+    private func metricPill(_ label: LocalizedStringKey, value: String, color: Color = .primary) -> some View {
         VStack(spacing: 2) {
             Text(label)
                 .font(.caption2)
@@ -228,11 +228,4 @@ struct ReviewDetailView: View {
         return String(format: "%.1f", value)
     }
     
-    private func trendColor(_ trend: ReviewTrend) -> Color {
-        switch trend {
-        case .up: return .green
-        case .down: return .red
-        case .flat: return .orange
-        }
-    }
 }

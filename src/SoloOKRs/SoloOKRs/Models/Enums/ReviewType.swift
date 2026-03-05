@@ -4,11 +4,20 @@
 // Review frequency types matching OKR best practices.
 
 import Foundation
+import SwiftUI
 
 enum ReviewType: String, Codable, CaseIterable {
-    case weekly = "Weekly Check-in"
-    case midCycle = "Mid-cycle Review"
-    case endCycle = "End-cycle Review"
+    case weekly = "weekly"
+    case midCycle = "midCycle"
+    case endCycle = "endCycle"
+    
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .weekly: return "Weekly Check-in"
+        case .midCycle: return "Mid-cycle Review"
+        case .endCycle: return "End-cycle Review"
+        }
+    }
     
     var icon: String {
         switch self {

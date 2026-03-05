@@ -4,11 +4,20 @@
 // Trend direction for KR progress tracking.
 
 import Foundation
+import SwiftUI
 
 enum ReviewTrend: String, Codable, CaseIterable {
-    case up = "Up"
-    case down = "Down"
-    case flat = "Flat"
+    case up = "up"
+    case down = "down"
+    case flat = "flat"
+    
+    var displayName: LocalizedStringKey {
+        switch self {
+        case .up: return "Improving"
+        case .down: return "Declining"
+        case .flat: return "Steady"
+        }
+    }
     
     var icon: String {
         switch self {
@@ -18,11 +27,11 @@ enum ReviewTrend: String, Codable, CaseIterable {
         }
     }
     
-    var color: String {
+    var swiftUIColor: Color {
         switch self {
-        case .up: return "green"
-        case .down: return "red"
-        case .flat: return "orange"
+        case .up: return .green
+        case .down: return .red
+        case .flat: return .orange
         }
     }
 }

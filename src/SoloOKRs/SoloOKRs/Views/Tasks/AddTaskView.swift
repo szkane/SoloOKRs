@@ -28,20 +28,20 @@ struct AddTaskView: View {
             HSplitView {
                 // LEFT: Basic Info Form
                 Form {
-                    Section("Title") {
+                    Section(LocalizedStringKey("Title")) {
                         TextField("", text: $title)
                             .font(.title3)
                     }
                     
-                    Section("Due Date") {
-                        Toggle("Set Due Date", isOn: $hasDueDate)
+                    Section(LocalizedStringKey("Due Date")) {
+                        Toggle(LocalizedStringKey("Set Due Date"), isOn: $hasDueDate)
                         if hasDueDate {
-                            DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                            DatePicker(LocalizedStringKey("Due Date"), selection: $dueDate, displayedComponents: .date)
                         }
                     }
                     
-                    Section("Priority") {
-                        Picker("Priority", selection: $priority) {
+                    Section(LocalizedStringKey("Priority")) {
+                        Picker(LocalizedStringKey("Priority"), selection: $priority) {
                             ForEach(Priority.allCases, id: \.self) { priority in
                                 Label(priority.displayName, systemImage: priority.icon)
                                     .tag(priority)
@@ -56,13 +56,13 @@ struct AddTaskView: View {
                 
                 // RIGHT: Markdown Notes Editor
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Notes")
+                    Text(LocalizedStringKey("Notes"))
                         .font(.headline)
                         .padding()
                     
                     MarkdownEditorView(
                         text: $description,
-                        placeholder: "Add notes (Markdown supported)..."
+                        placeholder: String(localized: "Add notes (Markdown supported)...")
                     )
                     .frame(maxHeight: .infinity)
                     .padding(.horizontal)
@@ -71,10 +71,10 @@ struct AddTaskView: View {
                 .padding(.top, 50)
                 .frame(minWidth: 300)
             }
-            .navigationTitle("New Task")
+            .navigationTitle(LocalizedStringKey("New Task"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizedStringKey("Cancel")) { dismiss() }
                 }
                 
                 ToolbarItem(placement: .automatic) {
@@ -83,13 +83,13 @@ struct AddTaskView: View {
                             await getSuggestions()
                         }
                     } label: {
-                        Label("Suggest", systemImage: "sparkles")
+                        Label(LocalizedStringKey("Suggest"), systemImage: "sparkles")
                     }
                     .disabled(isGettingSuggestions)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { addTask() }
+                    Button(LocalizedStringKey("Add")) { addTask() }
                         .disabled(title.isEmpty)
                 }
             }
@@ -97,7 +97,7 @@ struct AddTaskView: View {
                 NavigationStack {
                     List {
                         if suggestions.isEmpty {
-                            Text("No suggestions available.")
+                            Text(LocalizedStringKey("No suggestions available."))
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(suggestions, id: \.self) { suggestion in
@@ -116,10 +116,10 @@ struct AddTaskView: View {
                             }
                         }
                     }
-                    .navigationTitle("AI Suggestions")
+                    .navigationTitle(LocalizedStringKey("AI Suggestions"))
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button("Close") { showingSuggestions = false }
+                            Button(LocalizedStringKey("Close")) { showingSuggestions = false }
                         }
                     }
                 }

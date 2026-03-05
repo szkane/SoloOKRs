@@ -9,6 +9,7 @@ import SwiftData
 struct KeyResultListView: View {
     let objective: Objective
     @Binding var selectedKeyResult: KeyResult?
+    @AppStorage("preferredLanguage") private var preferredLanguage = ""
     
     @State private var showingAddSheet = false
     @State private var showingEditSheet = false
@@ -35,7 +36,7 @@ struct KeyResultListView: View {
         .safeAreaInset(edge: .top) {
             HStack {
                 Spacer()
-                Button("Add Key Result", systemImage: "plus") {
+                Button(LocalizedStringKey("Add Key Result"), systemImage: "plus") {
                     showingAddSheet = true
                 }
                 .buttonStyle(.borderedProminent)
@@ -45,9 +46,11 @@ struct KeyResultListView: View {
         }
         .sheet(isPresented: $showingAddSheet) {
             AddKeyResultView(objective: objective)
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
         .sheet(isPresented: $showingEditSheet) {
             EditObjectiveView(objective: objective)
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
         .sheet(isPresented: $showingAnalysisSheet) {
             NavigationStack {
@@ -60,7 +63,7 @@ struct KeyResultListView: View {
                                 promoteToActive()
                                 showingAnalysisSheet = false
                             } label: {
-                                Label("Promote to Active", systemImage: "arrow.up.circle.fill")
+                                Label(LocalizedStringKey("Promote to Active"), systemImage: "arrow.up.circle.fill")
                                     .font(.headline)
                                     .padding()
                                     .frame(maxWidth: .infinity)
@@ -71,18 +74,19 @@ struct KeyResultListView: View {
                         }
                         .padding(.bottom)
                         
-                        Text(analysisResult ?? "No analysis available.")
+                        Text(analysisResult ?? String(localized: "No analysis available."))
                             .textSelection(.enabled)
                     }
                     .padding()
                 }
-                .navigationTitle("AI Analysis")
+                .navigationTitle(LocalizedStringKey("AI Analysis"))
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { showingAnalysisSheet = false }
+                        Button(LocalizedStringKey("Done")) { showingAnalysisSheet = false }
                     }
                 }
             }
+            .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
             .frame(minWidth: 400, minHeight: 400)
         }
         // Add context menu to List background or empty area for Objective Actions?
@@ -114,6 +118,7 @@ struct KeyResultRowView: View {
     let keyResult: KeyResult
     let objective: Objective 
     @Binding var selectedKeyResult: KeyResult?
+    @AppStorage("preferredLanguage") private var preferredLanguage = ""
     
     @State private var showingEditSheet = false
     
@@ -182,18 +187,19 @@ struct KeyResultRowView: View {
                 Button {
                     showingEditSheet = true
                 } label: {
-                    Label("Edit Key Result", systemImage: "pencil")
+                    Label(LocalizedStringKey("Edit Key Result"), systemImage: "pencil")
                 }
                 
                 Button(role: .destructive) {
                     objective.keyResults.removeAll { $0.id == keyResult.id }
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(LocalizedStringKey("Delete"), systemImage: "trash")
                 }
             }
         }
         .sheet(isPresented: $showingEditSheet) {
             EditKeyResultView(keyResult: keyResult)
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
     }
     

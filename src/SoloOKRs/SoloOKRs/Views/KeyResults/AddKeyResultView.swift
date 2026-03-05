@@ -25,16 +25,16 @@ struct AddKeyResultView: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Key Result", text: $title)
+                TextField(LocalizedStringKey("Key Result"), text: $title)
                     .textFieldStyle(.plain)
                     .focused($isTitleFocused)
                     .font(.body)
             }
             .formStyle(.grouped)
-            .navigationTitle("New Key Result")
+            .navigationTitle(LocalizedStringKey("New Key Result"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(LocalizedStringKey("Cancel")) { dismiss() }
                 }
                 
                 ToolbarItem(placement: .automatic) {
@@ -47,14 +47,14 @@ struct AddKeyResultView: View {
                             ProgressView()
                                 .controlSize(.small)
                         } else {
-                            Label("Suggest", systemImage: "sparkles")
+                            Label(LocalizedStringKey("Suggest"), systemImage: "sparkles")
                         }
                     }
                     .disabled(title.isEmpty || isEvaluating)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { addKeyResult() }
+                    Button(LocalizedStringKey("Add")) { addKeyResult() }
                         .disabled(title.isEmpty)
                 }
             }
@@ -67,15 +67,15 @@ struct AddKeyResultView: View {
                                     .textSelection(.enabled)
                                     .markdownTheme(.gitHub)
                             } else {
-                                ContentUnavailableView("No Evaluation", systemImage: "sparkles", description: Text("Evaluation results will appear here."))
+                                ContentUnavailableView(LocalizedStringKey("No Evaluation"), systemImage: "sparkles", description: Text(LocalizedStringKey("Evaluation results will appear here.")))
                             }
                         }
                         .padding()
                     }
-                    .navigationTitle("KR Evaluation")
+                    .navigationTitle(LocalizedStringKey("KR Evaluation"))
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button("Close") { showingEvaluation = false }
+                            Button(LocalizedStringKey("Close")) { showingEvaluation = false }
                         }
                     }
                 }

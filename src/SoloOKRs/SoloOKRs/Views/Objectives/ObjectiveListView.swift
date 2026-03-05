@@ -25,6 +25,7 @@ struct ObjectiveListView: View {
     @State private var selectedObjectiveForAnalysis: Objective?
     @State private var showingReviewSheet: Objective?
     @State private var showingReviewHistory: Objective?
+    @AppStorage("preferredLanguage") private var preferredLanguage = ""
     
     enum ObjectiveTab: String, CaseIterable {
         case draft = "Draft"
@@ -156,9 +157,11 @@ struct ObjectiveListView: View {
         }
         .sheet(item: $showingReviewSheet) { obj in
             CreateReviewView(objective: obj)
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
         .sheet(item: $showingReviewHistory) { obj in
             ReviewHistoryView(objective: obj)
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
     }
 

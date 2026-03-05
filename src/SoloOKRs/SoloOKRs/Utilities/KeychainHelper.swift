@@ -16,7 +16,8 @@ class KeychainHelper {
             kSecValueData: data,
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
-            kSecAttrAccount: account
+            kSecAttrAccount: account,
+            kSecUseDataProtectionKeychain: true
         ] as [CFString: Any]
         
         // Add or update
@@ -26,7 +27,8 @@ class KeychainHelper {
             let query = [
                 kSecClass: kSecClassGenericPassword,
                 kSecAttrService: service,
-                kSecAttrAccount: account
+                kSecAttrAccount: account,
+                kSecUseDataProtectionKeychain: true
             ] as [CFString: Any]
             
             let attributesToUpdate = [kSecValueData: data] as [CFString: Any]
@@ -40,7 +42,8 @@ class KeychainHelper {
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
             kSecAttrAccount: account,
-            kSecReturnData: true
+            kSecReturnData: true,
+            kSecUseDataProtectionKeychain: true
         ] as [CFString: Any]
         
         var result: AnyObject?
@@ -53,7 +56,8 @@ class KeychainHelper {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
-            kSecAttrAccount: account
+            kSecAttrAccount: account,
+            kSecUseDataProtectionKeychain: true
         ] as [CFString: Any]
         
         SecItemDelete(query as CFDictionary)
