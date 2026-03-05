@@ -8,56 +8,17 @@
 
 **Beta 2 Improvements** — two-phase plan at `docs/plans/2026-03-05-beta2-improvements.md`.
 
-### Phase 1: AI Function Refactoring
-
-- Extract all prompts to Settings (new Prompts tab with Markdown editor)
-- Objective Analyze with AI: include KR/Task data, new prompt, icon → magnifying glass button
-- AddKeyResultView: auto-focus, remove detail label, KR evaluation with Suggest button
-
-### Phase 2: Review Mode Redesign
-
-- Delete existing global Review mode (toggle/permissions/settings)
-- New per-Objective review records (`OKRReview` + `KRReviewEntry` models)
-- Create/view reviews with KR status, progress, blockers, next steps, trend tracking
+- **Phase 1: AI Function Refactoring** (Extract prompts, Objective Analysis UI, KR eval)
+- **Phase 2: Review Mode Redesign** (Per-Objective reviews, KR progress, trend tracking)
 
 ---
 
-## ✅ Completed Phases
+## ✅ Completed Milestones
 
-### Implementation Plan (Phases 1-10)
+- **Core Foundation (Phases 1-10):** SwiftData models, 3-column UI, Settings, AI/MCP integrations, Subscription, Liquid Glass styling, i18n, Review Mode, Archiving.
+- **Post-Plan Enhancements:** REST/UDS MCP support, Keychain API storage, App Icon, Multilingual (8 languages), AI model configurations (Ollama, LM Studio), Task simplifications.
 
-All core phases complete:
-
-- Phase 1: Project Foundation (enums, models, SwiftData)
-- Phase 2: Core UI (3-column layout, list views)
-- Phase 3: Settings (multi-tab window)
-- Phase 4: AI Provider (protocol, service)
-- Phase 5: MCP Server (embedded, native Network framework)
-- Phase 6: Subscription (manager with trial logic)
-- Phase 7: Polish (Liquid Glass styling)
-- Phase 8: Multilingual (localization)
-- Phase 9: Review Mode (edit permissions)
-- Phase 10: Archiving (archive instead of delete)
-
-### Post-Plan Items
-
-- [x] Gemini AI integration via REST API
-- [x] Keychain security for API keys
-- [x] MCP Settings & Router
-- [x] Namespace conflict resolution (`OKRTask`)
-- [x] Documentation reorganization (`/init`, `/sync` workflows)
-- [x] **Design Correction:** KR types → Task types
-- [x] **Batch 2: UX Core Refinements** (Tabs, Review Mode, Permissions)
-- [x] **Batch 3: AI Settings & Publish Workflow** (Model Picker, Publish Logic)
-- [x] **Batch 4: User Feedback Fixes** (Ollama Support, Manual Publish)
-- [x] **Task Preview Markdown with Syntax Highlighting**
-- [x] **Task Refactoring:** Removed task-type system (simple/percentage/numeric/milestone), added subtask support
-- [x] **MCP Server Stability:** Fixed critical crash & hang via Delegate pattern + optimization
-- [x] **MCP Unix Domain Socket Transport:** Added UDS transport with `MCPTransportType` picker, `NIOUDSServer`, `UDSChannelHandler` (stdio protocol). Verified end-to-end.
-- [x] **App Icon:** Designed Apple-style flat app icon and generated macOS sizes.
-- [x] **Multilingual Support:** Implemented 8 new languages via String Catalog and translation generation.
-- [x] **AI Provider Configuration & Integrations:** Refactored settings, introduced OpenAI-compatible API endpoints for Custom/LM Studio/Anthropic, and added secure keychain storage UI notices with 8-language translations.
-- [x] **Review Feature i18n & UI Polish:** Fixed locale propagation in macOS sheets, localized Priority/ReviewStatus/ReviewTrend/ReviewType enums, redesigned review chips UI, enlarged ReviewHistoryView, updated Chinese "Review" terminology (复盘/回顧), removed Self Score, and fixed macOS Window title localization with bundle-based resolution.
+_(For detailed execution history, refer to historical session notes & plans)._
 
 ---
 
@@ -70,7 +31,7 @@ All core phases complete:
 
 ## 📋 Next Up
 
-All post-beta items completed. Beta 2 improvements are the current priority.
+- All post-beta items completed. Beta 2 improvements are the current priority.
 
 ---
 
@@ -86,25 +47,14 @@ All post-beta items completed. Beta 2 improvements are the current priority.
 
 ---
 
-## 📝 Session Notes
+## 📝 Recent Session Notes
 
-| Date       | Summary                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-03-05 | **Review i18n & UI Polish:** Fixed locale propagation in macOS sheets (KeyResultListView, ObjectiveListView, ReviewHistoryView). Localized Priority/Review enums with LocalizedStringResource/LocalizedStringKey. Redesigned review chips UI. Removed Self Score. Fixed Window title localization with bundle-based `localizedTitle()`. Updated Chinese Review terminology (复盘/回顧). Keychain: added `kSecUseDataProtectionKeychain`. Build ✅ |
-| 2026-03-05 | **Beta 2 Plan Created:** Designed two-phase improvement plan — Phase 1: AI refactoring (prompt management in Settings, Objective analyze UI, KR window optimization) + Phase 2: Review mode redesign (per-Objective structured reviews with KR entries). Updated CHECKPOINT.md.                                                                                                                                                                   |
-| 2026-03-05 | **AI Provider Configuration & Integrations:** Refactored API settings to use non-dropdown models lists, added OpenAI-compatible endpoint support (Custom/LM Studio/Anthropic), fixed Observable UI state updates, and implemented secure keychain local storage UI notices with 8-language translations. Build ✅                                                                                                                                 |
-| 2026-03-04 | **Workflows & Skills:** Cleaned up `.agent` folder structure, symlinked 5 advanced skills (superpowers, debugging, code review, branch finishing), and embedded them into `/init` and `/sync` workflows. Build ✅                                                                                                                                                                                                                                 |
-| 2026-02-20 | **Bug Fix:** Fixed in-app language switcher by injecting `preferredLanguage` AppStorage value into `\.locale` environment at `SoloOKRsApp` root level. Added missing languages to Settings Picker. Build ✅                                                                                                                                                                                                                                       |
-| 2026-02-20 | **Multilingual Support:** Added 8 new languages (zh-Hans, zh-Hant, ja, ko, de, fr, es, pt-BR) to `Localizable.xcstrings` and updated Xcode `knownRegions`. Compiled 1536 translated strings. Build ✅                                                                                                                                                                                                                                             |
-| 2026-02-20 | **MCP Unix Domain Socket Transport:** Added `NIOUDSServer.swift` + `UDSChannelHandler.swift` (stdio newline-JSON protocol). Added `MCPTransportType` enum + segmented picker in Settings. Fixed `tools/list` -32000 error by bypassing Main Actor for static responses. Verified with Python socket test. Build ✅                                                                                                                                |
-| 2026-02-14 | **MCP Server Stability:** Fixed critical `EXC_BAD_ACCESS` crash by refactoring `MCPServer` to use Delegate pattern (avoiding closure capture issues). Implemented `initialize` bypass for instant connection. Expanded `MCPRouter` with full CRUD tools (12 total). Fixed port number formatting. Verified with `curl`. Build ✅                                                                                                                  |
-| 2026-02-13 | **Task Refactoring:** Removed task-type system (TaskType enum + all type-specific fields/UI). Simplified tasks to basic checkbox items. 8 files modified, 1 deleted. Build ✅                                                                                                                                                                                                                                                                     |
-| 2026-02-08 | **Markdown Enhancements:** Integrated MarkdownUI + Splash for syntax highlighting. Created `SplashCodeSyntaxHighlighter.swift`. Fixed Markdown preview padding using card container. Added table button. Increased Add Task form width. Build ✅                                                                                                                                                                                                  |
-| 2026-02-06 | **Completed Batch 4 (User Feedback Fixes):** Fixed Ollama analysis routing (was using Gemini), implemented proper Ollama API calls (`/api/generate`), handled "unregistered caller" error, and added Manual Publish context menu. Build ✅                                                                                                                                                                                                        |
-| 2026-02-06 | **Completed Batch 3 & 2:** Implemented AI Model Picker, Draft->Active Workflow, Tabbed Objective List, and Review Mode refinements. Fixed "Operation not permitted" via App Sandbox entitlements. Build ✅                                                                                                                                                                                                                                        |
-| 2026-02-06 | **Design Correction:** Migrated KR types to Tasks (8 files). KR progress is now task-based. Added type-specific task editors. **Debug Fix:** Added "Clear All Data" button and fixed crash using batch deletion. Build ✅                                                                                                                                                                                                                         |
-| 2026-02-06 | Markdown editor with live preview. Created `MarkdownEditorView.swift` with toolbar and AttributedString rendering. Integrated into `TaskDetailView.swift`.                                                                                                                                                                                                                                                                                        |
-| 2026-02-06 | StoreKit 2 integration: product loading, purchase flow, transaction listener, restore. Products: lifetime ($29.9) + monthly ($1.99).                                                                                                                                                                                                                                                                                                              |
-| 2026-02-06 | Refactored MCP server from Network framework to SwiftNIO (NIOCore, NIOPosix, NIOHTTP1). Created `NIOHTTPServer.swift`, `HTTPRequestHandler.swift`. Build verified.                                                                                                                                                                                                                                                                                |
-| 2026-02-05 | Completed Gemini AI integration, MCP server with native Network framework, resolved build errors                                                                                                                                                                                                                                                                                                                                                  |
-| 2026-02-05 | Documentation reorganization: created `/init` and `/sync` workflows, refined CHECKPOINT.md. **Workflow Improvements:** Added git commit on sync and priority build fixing rules.                                                                                                                                                                                                                                                                  |
+_(Keep only the 5 most recent entries to maintain brief context)_
+
+| Date       | Summary                                                                                                                                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-05 | **Review i18n & UI Polish:** Fixed locale propagation in macOS sheets. Localized Priority/Review enums. Redesigned review chips UI. Removed Self Score. Fixed Window title localization. Updated Chinese Review terminology. Keychain: added `kSecUseDataProtectionKeychain`. Build ✅ |
+| 2026-03-05 | **Beta 2 Plan Created:** Designed two-phase improvement plan — Phase 1: AI refactoring + Phase 2: Review mode redesign. Updated CHECKPOINT.md.                                                                                                                                         |
+| 2026-03-05 | **AI Provider Configuration & Integrations:** Refactored API settings, added OpenAI-compatible endpoint support (Custom/LM Studio/Anthropic), fixed Observable UI state updates, and implemented secure keychain local storage UI notices with 8-language translations. Build ✅       |
+| 2026-03-04 | **Workflows & Skills:** Cleaned up `.agent` folder structure, symlinked 5 advanced skills (superpowers, debugging, code review, branch finishing), and embedded them into `/init` and `/sync` workflows. Build ✅                                                                      |
+| 2026-02-20 | **Multilingual & Core Configs:** Fixed AppStorage locale injection. Added 8 new languages to `Localizable.xcstrings`. Added UDS Transport for MCP Server. Build ✅                                                                                                                     |

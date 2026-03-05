@@ -20,8 +20,18 @@ description: Initialize session context for SOLO OKRs development
 cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build 2>&1 | tail -5
 ```
 
+## 🧠 Development Guidelines & Best Practices
+
+Before generating code, strictly adhere to the following project guidelines based on historical conventions:
+
+1. **Planning First:** Always create and archive a detailed plan before writing code. Update `CHECKPOINT.md`, `init.md`, and `sync.md` to ensure sustainable long-term development context.
+2. **Multilingual Support:** When adding or modifying features, ensure **full multilingual support** for the app (currently 9 languages: en, zh-Hans, zh-Hant, ja, ko, de, fr, es, pt-BR). Translated text must be length-adapted to the UI layout to avoid breaking the interface, and language switching MUST work in real time (e.g., leveraging `Localizable.xcstrings` and `\.locale` environment injections).
+3. **UI/UX Consistency:** For UI/UX updates, MUST use **swift-expert** skills to maintain a consistent, Apple-native user experience. Ensure clear loading states, error handling, padding, and smooth macOS integrations.
+4. **Security & Data:** Use local Keychain (`kSecUseDataProtectionKeychain`) for sensitive data like API keys. Provide clear UI prompts when secure storage is used.
+5. **Robustness:** Ensure proper memory management and concurrency (e.g. using Delegate patterns instead of capturing closures for MCP servers to avoid `EXC_BAD_ACCESS`). Make sure the build stays green during feature integration.
+
 ## Quick Reference
 
 - **Source:** `src/SoloOKRs/SoloOKRs/`
-- **Implementation Plan:** `docs/plans/2026-03-05-ai-provider-improvements.md`
+- **Implementation Plan:** the latest timestamp doc in `docs/plans/`
 - **Design Doc:** `docs/plans/2026-02-03-solo-okrs-design.md`
