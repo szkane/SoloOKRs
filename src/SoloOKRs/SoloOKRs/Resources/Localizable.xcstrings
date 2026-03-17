@@ -623,25 +623,25 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld 条评论"
+            "value": "%lld 次复盘"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld 條評論"
+            "value": "%lld 次回顧"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld 件のレビュー"
+            "value": "%lld 回の報告会"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개의 리뷰"
+            "value": "%lld 번의 사후 브리핑"
           }
         },
         "de": {
