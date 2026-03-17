@@ -1,4 +1,4 @@
-> **Last Session:** 2026-03-05 23:27
+> **Last Session:** 2026-03-17 11:25
 > **Current Phase:** Post-Beta Refinement 💎  
 > **Build Status:** ✅ (verified 2026-03-05 23:29)
 
@@ -52,5 +52,3 @@
 | 2026-03-05 | **Beta 3 Completed:** Implemented real-time AI streaming for all prompt functions. Redesigned Objective List with Icon-only tabs and progress rings. Added Swipe Actions (Archive/History/Review) with Trophy icon. Refined Chinese localization (复盘/回顧). Added History/Achieved translations. Build ✅ |
 | 2026-03-05 | **Review i18n & UI Polish:** Fixed locale propagation in macOS sheets. Localized Priority/Review enums. Redesigned review chips UI. Removed Self Score. Fixed Window title localization. Updated Chinese Review terminology. Keychain: added `kSecUseDataProtectionKeychain`. Build ✅                      |
 | 2026-03-05 | **Beta 2 Plan Created:** Designed two-phase improvement plan — Phase 1: AI refactoring + Phase 2: Review mode redesign. Updated CHECKPOINT.md.                                                                                                                                                              |
-| 2026-03-05 | **AI Provider Configuration & Integrations:** Refactored API settings, added OpenAI-compatible endpoint support (Custom/LM Studio/Anthropic), fixed Observable UI state updates, and implemented secure keychain local storage UI notices with 8-language translations. Build ✅                            |
-| 2026-03-04 | **Workflows & Skills:** Cleaned up `.agent` folder structure, symlinked 5 advanced skills (superpowers, debugging, code review, branch finishing), and embedded them into `/init` and `/sync` workflows. Build ✅                                                                                           |
