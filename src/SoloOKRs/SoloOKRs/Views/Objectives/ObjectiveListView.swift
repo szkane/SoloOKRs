@@ -435,17 +435,25 @@ struct ObjectiveRowView: View {
                         .lineLimit(1)
                 }
                 
-                HStack {
+                HStack(alignment: .bottom) {
                     Text("\(objective.keyResults.count) Key Results")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
+                    
                     Spacer()
-                    if objective.isOverdue {
-                        Label("Overdue", systemImage: "exclamationmark.circle")
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        if objective.isOverdue {
+                            Label("Overdue", systemImage: "exclamationmark.circle")
+                                .font(.caption2)
+                                .foregroundStyle(.red)
+                                .symbolEffect(.pulse, options: .repeating, value: isOverduePulsing)
+                                .onAppear { isOverduePulsing = true }
+                        }
+                        
+                        Text("Created " + objective.createdAt.formatted(.dateTime.year().month().day()))
                             .font(.caption2)
-                            .foregroundStyle(.red)
-                            .symbolEffect(.pulse, options: .repeating, value: isOverduePulsing)
-                            .onAppear { isOverduePulsing = true }
+                            .foregroundStyle(.tertiary)
                     }
                 }
             }

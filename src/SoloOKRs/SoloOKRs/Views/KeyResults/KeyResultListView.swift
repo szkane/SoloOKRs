@@ -18,19 +18,62 @@ struct KeyResultListView: View {
     @State private var analysisResult: String?
     @State private var isAnalyzing = false
     @State private var showingAnalysisSheet = false
+    @State private var showingReviewHistory = false
     
     var sortedKeyResults: [KeyResult] {
         objective.keyResults.sorted { $0.order < $1.order }
     }
     
     var body: some View {
-        List(selection: $selectedKeyResult) {
-            ForEach(sortedKeyResults) { keyResult in
-                KeyResultRowView(keyResult: keyResult, objective: objective, selectedKeyResult: $selectedKeyResult)
-                    .tag(keyResult)
+        VStack(spacing: 0) {
+            // Context Header
+            VStack(alignment: .leading, spacing: 8) {
+                Text(objective.title)
+                    .font(.title)
+                    .fontWeight(.bold)
+                
+                HStack(spacing: 16) {
+                    Label(objective.createdAt.formatted(date: .abbreviated, time: .shortened), systemImage: "calendar")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    if !objective.reviews.isEmpty {
+                        Button {
+                            showingReviewHistory = true
+                        } label: {
+                            Label("\(objective.reviews.count) Reviews", systemImage: "doc.text.magnifyingglass")
+                                .font(.subheadline)
+                                .foregroundStyle(.blue)
+                        }
+                        .buttonStyle(.plain)
+                        .onHover { isHovered in
+                            if isHovered {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                    } else {
+                        Label("\(objective.reviews.count) Reviews", systemImage: "doc.text.magnifyingglass")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(Color(NSColor.windowBackgroundColor))
+            
+            Divider()
+            
+            List(selection: $selectedKeyResult) {
+                ForEach(sortedKeyResults) { keyResult in
+                    KeyResultRowView(keyResult: keyResult, objective: objective, selectedKeyResult: $selectedKeyResult)
+                        .tag(keyResult)
+                }
             }
         }
-        .navigationTitle(objective.title)
+        .navigationTitle("")
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
@@ -86,6 +129,10 @@ struct KeyResultListView: View {
             }
             .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
             .frame(minWidth: 400, minHeight: 400)
+        }
+        .sheet(isPresented: $showingReviewHistory) {
+            ReviewHistoryView(objective: objective)
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
         // Add context menu to List background or empty area for Objective Actions?
         // User asked for double-click/right-click on "Objectives" (which are in the list in parent view)

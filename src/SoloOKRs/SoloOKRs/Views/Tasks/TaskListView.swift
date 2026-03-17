@@ -5,18 +5,46 @@
 
 import SwiftUI
 import SwiftData
+import MarkdownUI
 
 struct TaskListView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openWindow) private var openWindow
     @AppStorage("addingTaskKeyResultID") private var addingKeyResultID: String = ""
+    @State private var selectedTaskID: UUID?
     let keyResult: KeyResult
     
     var body: some View {
-        List {
-            ForEach(keyResult.tasks) { task in
-                TaskRowView(task: task)
+        VSplitView {
+            List(selection: $selectedTaskID) {
+                ForEach(keyResult.tasks) { task in
+                    TaskRowView(task: task, selectedTaskID: $selectedTaskID)
+                        .tag(task.id)
+                }
             }
+            .frame(minHeight: 150)
+            
+            VStack {
+                if let selectedID = selectedTaskID, let task = keyResult.tasks.first(where: { $0.id == selectedID }) {
+                    if task.taskDescription.isEmpty {
+                        Text("This task has no details.")
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView {
+                            Markdown(task.taskDescription)
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
+                        }
+                    }
+                } else {
+                    Text("No task selected")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+            .frame(minHeight: 100)
         }
         .navigationTitle(keyResult.title)
         .toolbar {
@@ -36,31 +64,29 @@ struct TaskListView: View {
 
 struct TaskRowView: View {
     @Bindable var task: OKRTask
+    @Binding var selectedTaskID: UUID?
     @Environment(\.openWindow) private var openWindow
     @AppStorage("editingTaskID") private var editingTaskID: String = ""
-    @State private var isExpanded = false
     
     private var canEdit: Bool {
         task.isEditable
     }
     
-    private var notesPreview: AttributedString {
-        (try? AttributedString(markdown: task.taskDescription)) 
-            ?? AttributedString(task.taskDescription)
-    }
-    
-    private var needsExpansion: Bool {
-        task.taskDescription.split(separator: "\n").count > 10 
-            || task.taskDescription.count > 500
-    }
-    
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Completion checkbox
-            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                .font(.title2)
-                .foregroundStyle(task.isCompleted ? .green : .secondary)
-                .frame(width: 28)
+            Button {
+                if canEdit {
+                    task.isCompleted.toggle()
+                }
+            } label: {
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(task.isCompleted ? .green : .secondary)
+                    .frame(width: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 4) {
                 // Title
@@ -74,28 +100,6 @@ struct TaskRowView: View {
                     Text(dueDate, style: .date)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                }
-                
-                // Markdown notes preview (expandable)
-                if !task.taskDescription.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(notesPreview)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(isExpanded ? nil : 10)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        if needsExpansion {
-                            Button(isExpanded ? "Show less" : "Read more...") {
-                                withAnimation { isExpanded.toggle() }
-                            }
-                            .font(.caption)
-                            .buttonStyle(.plain)
-                            .foregroundStyle(.blue)
-                        }
-                    }
-                    .padding(.top, 4)
                 }
             }
             
@@ -111,10 +115,13 @@ struct TaskRowView: View {
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
-        .onTapGesture {
+        .onTapGesture(count: 2) {
             editingTaskID = task.id.uuidString
             openWindow(id: "editTask")
         }
+        .simultaneousGesture(TapGesture().onEnded {
+            selectedTaskID = task.id
+        })
         .contextMenu {
             Button {
                 editingTaskID = task.id.uuidString
