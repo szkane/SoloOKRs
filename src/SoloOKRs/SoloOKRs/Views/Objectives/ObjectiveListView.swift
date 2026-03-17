@@ -26,7 +26,10 @@ struct ObjectiveListView: View {
     @State private var selectedObjectiveForAnalysis: Objective?
     @State private var showingReviewSheet: Objective?
     @State private var showingReviewHistory: Objective?
+    @State private var editingObjective: Objective?
     @AppStorage("preferredLanguage") private var preferredLanguage = ""
+    @AppStorage("selectedSettingsTab") private var selectedTabSettings: String = "general"
+    @Environment(\.openSettings) private var openSettings
     
     enum ObjectiveTab: String, CaseIterable {
         case draft = "Draft"
@@ -72,6 +75,9 @@ struct ObjectiveListView: View {
                         selectedObjective: $selectedObjective,
                         onAnalyze: {
                             analyzeObjective(objective)
+                        },
+                        onEdit: {
+                            editingObjective = objective
                         }
                     )
                     .tag(objective)
@@ -92,6 +98,46 @@ struct ObjectiveListView: View {
                 }
             }
             .animation(.spring(duration: 0.3), value: filteredObjectives.count)
+            
+            Divider()
+            
+            HStack(spacing: 20) {
+                Button {
+                    selectedTabSettings = "ai"
+                    try? openSettings()
+                } label: {
+                    Image(systemName: "brain")
+                        .foregroundStyle(AIService.shared.isConfigured ? .green : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help("AI Settings")
+
+                Button {
+                    selectedTabSettings = "mcp"
+                    try? openSettings()
+                } label: {
+                    Image(systemName: "network")
+                        .foregroundStyle(MCPServer.shared.isRunning ? .green : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help("MCP Settings")
+
+                Button {
+                    selectedTabSettings = "sync"
+                    try? openSettings()
+                } label: {
+                    Image(systemName: "icloud.fill")
+                        .foregroundStyle(.green)
+                }
+                .buttonStyle(.plain)
+                .help("Sync Settings")
+                
+                Spacer()
+            }
+            .font(.system(size: 14))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.windowBackgroundColor))
         }
         .navigationTitle("Objectives")
 
@@ -177,10 +223,24 @@ struct ObjectiveListView: View {
             ReviewHistoryView(objective: obj)
                 .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
+        .sheet(item: $editingObjective) { obj in
+            EditObjectiveView(objective: obj)
+                .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
+        }
     }
 
     @ViewBuilder
     private func contextMenuContent(for objective: Objective) -> some View {
+        if objective.status != .archived && objective.status != .achieved {
+            Button {
+                editingObjective = objective
+            } label: {
+                Label("Edit Objective", systemImage: "pencil")
+            }
+            
+            Divider()
+        }
+        
         Button {
             analyzeObjective(objective)
         } label: {
@@ -393,6 +453,7 @@ struct ObjectiveRowView: View {
     let objective: Objective
     @Binding var selectedObjective: Objective?
     var onAnalyze: (() -> Void)? = nil
+    var onEdit: (() -> Void)? = nil
     
     @State private var isOverduePulsing = false
     @State private var showingEditSheet = false
@@ -468,24 +529,12 @@ struct ObjectiveRowView: View {
         )
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
-            if canEdit {
-                showingEditSheet = true
+            if objective.status != .archived && objective.status != .achieved && ReviewModeManager.shared.canEditOKR(status: objective.status) {
+                onEdit?()
             }
         }
         .onTapGesture(count: 1) {
             selectedObjective = objective
-        }
-        .contextMenu {
-            if canEdit {
-                Button {
-                    showingEditSheet = true
-                } label: {
-                    Label("Edit Objective", systemImage: "pencil")
-                }
-            }
-        }
-        .sheet(isPresented: $showingEditSheet) {
-            EditObjectiveView(objective: objective)
         }
     }
     

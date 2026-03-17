@@ -240,17 +240,6 @@ class AIService {
         return parseJSONList(from: text)
     }
 
-    func suggestTasks(for keyResult: KeyResult) async throws -> [String] {
-        let prompt = PromptManager.shared.resolvedSuggestTaskPrompt(for: keyResult)
-        let text = try await generate(prompt: prompt)
-        return parseJSONList(from: text)
-    }
-
-    func suggestTasksStream(for keyResult: KeyResult) -> AsyncThrowingStream<String, Error> {
-        let prompt = PromptManager.shared.resolvedSuggestTaskPrompt(for: keyResult)
-        return generateStream(prompt: prompt)
-    }
-
     func evaluateKeyResult(krTitle: String, objectiveTitle: String) async throws -> String {
         let prompt = PromptManager.shared.resolvedEvaluateKRPrompt(objectiveTitle: objectiveTitle, krTitle: krTitle)
         return try await generate(prompt: prompt)

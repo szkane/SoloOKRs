@@ -194,8 +194,6 @@ struct PromptSettingsView: View {
             return ["{{objective.title}}", "{{objective.description}}", "{{kr_list}}", "{{task_list}}", "{{currentLanguage}}"]
         case .suggestKR:
             return ["{{objective.title}}", "{{objective.description}}", "{{currentLanguage}}"]
-        case .suggestTask:
-            return ["{{keyResult.title}}", "{{currentLanguage}}"]
         case .evaluateKR:
             return ["{{objective.title}}", "{{kr.title}}", "{{currentLanguage}}"]
         }

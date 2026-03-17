@@ -48,7 +48,7 @@ struct TaskListView: View {
         }
         .navigationTitle(keyResult.title)
         .toolbar {
-            ToolbarItem(placement: .navigation) {
+            ToolbarItem(placement: .automatic) {
                 Button {
                     addingKeyResultID = keyResult.id.uuidString
                     openWindow(id: "addTask")

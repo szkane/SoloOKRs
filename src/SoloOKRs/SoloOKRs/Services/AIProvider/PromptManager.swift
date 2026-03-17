@@ -10,7 +10,6 @@ import Foundation
 enum PromptTemplateID: String, CaseIterable, Identifiable {
     case analyzeOKR = "analyzeOKR"
     case suggestKR = "suggestKR"
-    case suggestTask = "suggestTask"
     case evaluateKR = "evaluateKR"
     
     var id: String { rawValue }
@@ -19,7 +18,6 @@ enum PromptTemplateID: String, CaseIterable, Identifiable {
         switch self {
         case .analyzeOKR: return "Analyze OKR"
         case .suggestKR: return "Suggest Key Results"
-        case .suggestTask: return "Suggest Tasks"
         case .evaluateKR: return "Evaluate Key Result"
         }
     }
@@ -28,7 +26,6 @@ enum PromptTemplateID: String, CaseIterable, Identifiable {
         switch self {
         case .analyzeOKR: return "Analyzes an Objective and its KRs for OKR best practices"
         case .suggestKR: return "Suggests measurable Key Results for an Objective"
-        case .suggestTask: return "Suggests concrete tasks for a Key Result"
         case .evaluateKR: return "Evaluates a single KR for quality and suggests improvements"
         }
     }
@@ -37,7 +34,6 @@ enum PromptTemplateID: String, CaseIterable, Identifiable {
         switch self {
         case .analyzeOKR: return "magnifyingglass.circle"
         case .suggestKR: return "list.bullet.circle"
-        case .suggestTask: return "checkmark.circle"
         case .evaluateKR: return "star.circle"
         }
     }
@@ -113,13 +109,6 @@ class PromptManager {
         var template = prompt(for: .suggestKR)
         template = template.replacingOccurrences(of: "{{objective.title}}", with: objective.title)
         template = template.replacingOccurrences(of: "{{objective.description}}", with: objective.objectiveDescription)
-        template = template.replacingOccurrences(of: "{{currentLanguage}}", with: currentLanguageDisplayName())
-        return template
-    }
-    
-    func resolvedSuggestTaskPrompt(for keyResult: KeyResult) -> String {
-        var template = prompt(for: .suggestTask)
-        template = template.replacingOccurrences(of: "{{keyResult.title}}", with: keyResult.title)
         template = template.replacingOccurrences(of: "{{currentLanguage}}", with: currentLanguageDisplayName())
         return template
     }
@@ -203,15 +192,6 @@ class PromptManager {
             Context: "{{objective.description}}"
             
             Return ONLY a JSON array of strings. No markdown, no explanation.
-            **Output language: {{currentLanguage}}**
-            """
-            
-        case .suggestTask:
-            return """
-            Suggest 3-5 concrete tasks/actions to help achieve this Key Result.
-            Return ONLY a JSON array of strings. No markdown, no explanation.
-            
-            Key Result: "{{keyResult.title}}"
             **Output language: {{currentLanguage}}**
             """
             

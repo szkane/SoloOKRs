@@ -18,13 +18,6 @@ struct AddTaskView: View {
     @State private var dueDate = Date()
     @State private var priority: Priority = .medium
     
-    // AI State
-    @State private var suggestions: [String] = []
-    @State private var rawSuggestionText: String = ""
-    @State private var showingSuggestions = false
-    @State private var isGettingSuggestions = false
-    @State private var suggestionTask: Task<Void, Never>?
-    @State private var suggestionError: String?
     
     var body: some View {
         NavigationStack {
@@ -80,124 +73,18 @@ struct AddTaskView: View {
                     Button(LocalizedStringKey("Cancel")) { dismiss() }
                 }
                 
-                ToolbarItem(placement: .automatic) {
-                    Button {
-                        getSuggestions()
-                    } label: {
-                        Label(LocalizedStringKey("Suggest"), systemImage: "sparkles")
-                    }
-                    .disabled(isGettingSuggestions)
-                }
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button(LocalizedStringKey("Add")) { addTask() }
                         .disabled(title.isEmpty)
                 }
             }
-            .sheet(isPresented: $showingSuggestions) {
-                NavigationStack {
-                    List {
-                        if isGettingSuggestions && suggestions.isEmpty {
-                            HStack {
-                                ProgressView()
-                                    .padding(.trailing, 8)
-                                Text(LocalizedStringKey("Generating suggestions..."))
-                                    .foregroundStyle(.secondary)
-                            }
-                        } else if let error = suggestionError {
-                            Text(error)
-                                .foregroundStyle(.red)
-                        } else if suggestions.isEmpty && !isGettingSuggestions {
-                            Text(LocalizedStringKey("No suggestions available."))
-                                .foregroundStyle(.secondary)
-                        } else {
-                            ForEach(suggestions, id: \.self) { suggestion in
-                                Button {
-                                    title = suggestion
-                                    showingSuggestions = false
-                                } label: {
-                                    HStack {
-                                        Text(suggestion)
-                                            .foregroundStyle(.primary)
-                                        Spacer()
-                                        Image(systemName: "plus.circle")
-                                            .foregroundStyle(.blue)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .navigationTitle(LocalizedStringKey("AI Suggestions"))
-                    .toolbar {
-                        if isGettingSuggestions {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button(role: .destructive) {
-                                    suggestionTask?.cancel()
-                                    isGettingSuggestions = false
-                                } label: {
-                                    Label(LocalizedStringKey("Stop"), systemImage: "stop.circle.fill")
-                                        .foregroundColor(.red)
-                                }
-                            }
-                        }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button(LocalizedStringKey("Close")) { showingSuggestions = false }
-                        }
-                    }
-                }
-                .presentationDetents([.medium, .large])
-                .onDisappear {
-                    suggestionTask?.cancel()
-                    isGettingSuggestions = false
-                }
-            }
+
         }
         .frame(minWidth: 900, idealWidth: 1000, maxWidth: .infinity, minHeight: 600, idealHeight: 700, maxHeight: .infinity)
     }
     
-    private func getSuggestions() {
-        suggestions = []
-        rawSuggestionText = ""
-        suggestionError = nil
-        isGettingSuggestions = true
-        showingSuggestions = true
-        
-        suggestionTask?.cancel()
-        suggestionTask = Task {
-            do {
-                let stream = AIService.shared.suggestTasksStream(for: keyResult)
-                for try await chunk in stream {
-                    guard !Task.isCancelled else { break }
-                    rawSuggestionText += chunk
-                    suggestions = parseJSONList(from: rawSuggestionText)
-                }
-            } catch {
-                if !Task.isCancelled {
-                    suggestionError = "Failed to get suggestions: \(error.localizedDescription)"
-                    print("Failed to get suggestions: \(error)")
-                }
-            }
-            isGettingSuggestions = false
-        }
-    }
-    
-    private func parseJSONList(from text: String) -> [String] {
-        let cleanText = text.replacingOccurrences(of: "```json", with: "")
-                            .replacingOccurrences(of: "```", with: "")
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if let data = cleanText.data(using: .utf8),
-           let suggestions = try? JSONDecoder().decode([String].self, from: data) {
-            return suggestions
-        }
-        
-        // Fallback: split by newlines if JSON parsing fails/is incomplete
-        return cleanText.components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty && ($0.starts(with: "-") || $0.first?.isNumber == true) }
-            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "-1234567890. \"[],")) }
-            .filter { !$0.isEmpty }
-    }
+
     
     private func addTask() {
         let task = OKRTask(

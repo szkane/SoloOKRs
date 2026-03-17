@@ -49,40 +49,6 @@ struct ContentView: View {
                 )
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    selectedTab = "ai"
-                    try? openSettings()
-                } label: {
-                    Image(systemName: "brain")
-                        .foregroundStyle(AIService.shared.isConfigured ? .green : .secondary)
-                }
-                .help("AI Settings")
-            }
-
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    selectedTab = "mcp"
-                    try? openSettings()
-                } label: {
-                    Image(systemName: "network")
-                        .foregroundStyle(MCPServer.shared.isRunning ? .green : .secondary)
-                }
-                .help("MCP Settings")
-            }
-
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    selectedTab = "sync"
-                    try? openSettings()
-                } label: {
-                    Image(systemName: "icloud.fill")
-                        .foregroundStyle(.green)
-                }
-                .help("Sync Settings")
-            }
-        }
         .frame(minWidth: 900, minHeight: 600)
         .onChange(of: selectedObjective) { _, newValue in
             // Clear key result selection when objective changes
