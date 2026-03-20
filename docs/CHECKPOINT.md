@@ -1,6 +1,6 @@
-> **Last Session:** 2026-03-17 14:30
+> **Last Session:** 2026-03-20 11:10
 > **Current Phase:** Post-Beta Refinement 💎  
-> **Build Status:** ✅ (verified 2026-03-17 14:30)
+> **Build Status:** ✅ (verified 2026-03-20 11:10)
 
 ---
 
@@ -21,6 +21,7 @@
 
 ## ✅ Session Sync Result
 
+- [x] Fixed Markdown Rendering Consistency (GFM + Syntax Highlighting) ✅
 - [x] Expert UI Refinement & Toolbar Stabilization ✅
 
 ---
@@ -48,9 +49,9 @@
 
 | Date       | Summary                                                                                                                                                                                                                                                                                                                                                               |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-20 | **Markdown Rendering Sync:** Fixed inconsistent markdown rendering across `TaskDetailView`, `EditTaskView`, and `TaskListView`. Replaced limited `AttributedString` with `MarkdownUI` and added GitHub theme/Splash syntax highlighting for fenced code blocks. Build ✅ |
 | 2026-03-17 | **Expert UI & Toolbar Fix:** Redesigned `AddKeyResultView` with card layout and `@FocusState`. Migrated (AI, MCP, Sync) icons to Sidebar Footer "Status Bar" for alignment stability. Injected 39+ missing translations. Reverted AI buttons to blue/sparkles. Build ✅                                                                                              |
 | 2026-03-17 | **Objective UI Improvements:** Added Objective creation date to `ObjectiveRowView`, aligning to the right of `x Key Results`. Rendered unified Header inside `KeyResultListView` separating "Objective Title", "Creation time", and "Review Count". Hid redundant toolbar objective title. Implemented click-interaction bringing up `ReviewHistoryView`. Build ✅ |
 | 2026-03-17 | **Task List UI Improvements:** Updated Task List to use `VSplitView` (Pane Split View). Implemented single-click row selection to show markdown notes preview in the bottom pane. Changed edit action to double-click on task row. Kept checkbox toggle independent. Added 9-language UI translations. Build ✅                                                       |
 | 2026-03-05 | **Beta 3 Completed:** Implemented real-time AI streaming for all prompt functions. Redesigned Objective List with Icon-only tabs and progress rings. Added Swipe Actions (Archive/History/Review) with Trophy icon. Refined Chinese localization (复盘/回顧). Added History/Achieved translations. Build ✅                                                               |
-| 2026-03-05 | **Review i18n & UI Polish:** Fixed locale propagation in macOS sheets. Localized Priority/Review enums. Redesigned review chips UI. Removed Self Score. Fixed Window title localization. Updated Chinese Review terminology. Keychain: added `kSecUseDataProtectionKeychain`. Build ✅                                                                                    |
 
