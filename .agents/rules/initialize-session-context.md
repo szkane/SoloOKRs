@@ -1,10 +1,8 @@
 ---
-description: Initialize session context for SOLO OKRs development
+trigger: always_on
 ---
 
 ## Session Initialization
-
-// turbo-all
 
 1. Invoke the `using-superpowers` skill to set up expectations for skill usage in this session.
 2. Read `docs/CHECKPOINT.md` for current project state
@@ -17,14 +15,14 @@ description: Initialize session context for SOLO OKRs development
 6. Verify build state locally:
 
 ```bash
-cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build 2>&1 | tail -5
+cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build > /tmp/build_log.txt 2>&1 || grep -A 5 -B 5 "error:" /tmp/build_log.txt
 ```
 
 ## 🧠 Development Guidelines & Best Practices
 
 Before generating code, strictly adhere to the following project guidelines based on historical conventions:
 
-1. **Planning First:** Always create and archive a detailed plan before writing code. Update `CHECKPOINT.md`, `init.md`, and `sync.md` to ensure sustainable long-term development context.
+1. **Planning First:** Always create and archive a detailed plan before writing code and Save the implementation plan to the `docs\plan\` folder using the `date-goal.md` filename format, for example, `2026-03-05-beta3-improvements.md`. Update `CHECKPOINT.md` and agents rules to ensure sustainable long-term development context.
 2. **Multilingual Support:** When adding or modifying features, ensure **full multilingual support** for the app (currently 9 languages: en, zh-Hans, zh-Hant, ja, ko, de, fr, es, pt-BR). Translated text must be length-adapted to the UI layout to avoid breaking the interface, and language switching MUST work in real time (e.g., leveraging `Localizable.xcstrings` and `\.locale` environment injections).
 3. **UI/UX Consistency:** For UI/UX updates, MUST use **swift-expert** skills to maintain a consistent, Apple-native user experience. Ensure clear loading states, error handling, padding, and smooth macOS integrations.
 4. **Security & Data:** Use local Keychain (`kSecUseDataProtectionKeychain`) for sensitive data like API keys. Provide clear UI prompts when secure storage is used.

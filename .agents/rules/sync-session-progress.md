@@ -1,5 +1,5 @@
 ---
-description: Sync session progress to CHECKPOINT.md before ending
+trigger: always_on
 ---
 
 ## Session Sync Steps
@@ -7,7 +7,7 @@ description: Sync session progress to CHECKPOINT.md before ending
 Before ending a session, update `docs/CHECKPOINT.md`:
 
 1. **Code Review and Integration** - If you have completed a task or implemented a feature, invoke the `requesting-code-review` and `receiving-code-review` skills. Then, use the `finishing-a-development-branch` skill to determine how to integrate the work appropriately.
-2. **Plan & Documentation Maintenance** - Always create, update, and archive detailed plans (`docs/plans/*.md`) before writing code or wrapping up. Make sure documentation reflects the new development state. Ensure `CHECKPOINT.md`, `init.md`, and `sync.md` are aligned with sustainable long-term goals.
+2. **Plan & Documentation Maintenance** - Always create, update, and archive detailed plans (`docs/plans/*.md`) before writing code or wrapping up. Make sure documentation reflects the new development state. Ensure `CHECKPOINT.md`, `initialize-session-context.md`, and `sync-session-progress.md` are aligned with sustainable long-term goals.
 3. **Ensure Clean State** - Commit any pending code changes:
 
    ```bash
@@ -35,7 +35,7 @@ Before ending a session, update `docs/CHECKPOINT.md`:
 9. **Update Build Status** - ✅ or ❌ based on build result
 10. **Commit Sync Changes:**
     ```bash
-    git add docs/CHECKPOINT.md .agent/workflows/ git commit -m "docs: sync session progress and workflows"
+    git add docs/CHECKPOINT.md .agents/workflows/ && git commit -m "docs: sync session progress and workflows"
     ```
 
 ## What to Include in Session Notes
