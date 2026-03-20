@@ -22,7 +22,7 @@ cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build -destination 'platform=macO
 
 Before generating code, strictly adhere to the following project guidelines based on historical conventions:
 
-1. **Planning First:** Always create and archive a detailed plan before writing code and Save the implementation plan to the `docs\plan\` folder using the `date-goal.md` filename format, for example, `2026-03-05-beta3-improvements.md`. Update `CHECKPOINT.md` and agents rules to ensure sustainable long-term development context.
+1. **Planning First:** Always create and archive a detailed plan before writing code and Save the implementation plan to the `docs\plan\` folder using the `YYYY-MM-DD-*.md` filename format, for example, `2026-03-05-beta3-improvements.md`. Update `CHECKPOINT.md` and agents rules to ensure sustainable long-term development context.
 2. **Multilingual Support:** When adding or modifying features, ensure **full multilingual support** for the app (currently 9 languages: en, zh-Hans, zh-Hant, ja, ko, de, fr, es, pt-BR). Translated text must be length-adapted to the UI layout to avoid breaking the interface, and language switching MUST work in real time (e.g., leveraging `Localizable.xcstrings` and `\.locale` environment injections).
 3. **UI/UX Consistency:** For UI/UX updates, MUST use **swift-expert** skills to maintain a consistent, Apple-native user experience. Ensure clear loading states, error handling, padding, and smooth macOS integrations.
 4. **Security & Data:** Use local Keychain (`kSecUseDataProtectionKeychain`) for sensitive data like API keys. Provide clear UI prompts when secure storage is used.
