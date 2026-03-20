@@ -48,7 +48,7 @@ struct MCPSettingsView: View {
             }
 
             // MARK: Tools Reference
-            Section("Available Tools (12)") {
+            Section("Available Tools (15)") {
                 VStack(alignment: .leading, spacing: 12) {
                     toolGroup("Objectives", tools: [
                         ("list.bullet", "list_objectives", "List all objectives"),
@@ -63,10 +63,15 @@ struct MCPSettingsView: View {
                         ("trash", "delete_key_result", "Delete key result"),
                     ])
                     toolGroup("Tasks", tools: [
-                        ("list.bullet", "list_tasks", "List tasks for KR"),
-                        ("plus.circle", "create_task", "Create task"),
-                        ("pencil.circle", "update_task", "Update task fields"),
+                        ("list.bullet", "list_tasks", "List tasks for KR (Markdown notes)"),
+                        ("plus.circle", "create_task", "Create task with Markdown notes"),
+                        ("pencil.circle", "update_task", "Update task fields & notes"),
                         ("trash", "delete_task", "Delete task"),
+                    ])
+                    toolGroup("Reviews", tools: [
+                        ("list.bullet", "list_reviews", "List reviews for objective"),
+                        ("doc.text.magnifyingglass", "get_review", "Get full review detail"),
+                        ("plus.circle", "create_review", "Create review with KR entries"),
                     ])
                 }
             }

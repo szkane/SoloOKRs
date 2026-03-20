@@ -158,7 +158,7 @@ class MCPServer {
                 ["name": name, "description": desc, "inputSchema": ["type": "object", "properties": props, "required": required] as [String: Any]]
             }
             return [
-                tool("list_objectives", "List all OKR objectives with status and progress.", props: [:], required: []),
+                tool("list_objectives", "List all OKR objectives with status, progress, review count, and last reviewed date.", props: [:], required: []),
                 tool("create_objective", "Create a new OKR objective (defaults to Draft status).",
                      props: ["title": ["type": "string", "description": "Title of the objective"],
                              "description": ["type": "string", "description": "Detailed description"]],
@@ -189,18 +189,29 @@ class MCPServer {
                 tool("create_task", "Create a new task under a key result.",
                      props: ["key_result_id": ["type": "string", "description": "UUID of the parent key result"],
                              "title": ["type": "string", "description": "Title of the task"],
-                             "description": ["type": "string", "description": "Task description (supports Markdown)"],
+                             "taskDescription": ["type": "string", "description": "Notes for the task. Supports GitHub-flavored Markdown (GFM): bold, italic, bullet lists, numbered lists, code blocks (fenced with ```), inline code, links, and blockquotes."],
                              "priority": ["type": "string", "description": "Priority: low, medium, high, urgent"]],
                      required: ["key_result_id", "title"]),
                 tool("update_task", "Update an existing task.",
                      props: ["id": ["type": "string", "description": "UUID of the task"],
                              "title": ["type": "string", "description": "New title"],
-                             "description": ["type": "string", "description": "New description"],
+                             "taskDescription": ["type": "string", "description": "Updated notes for the task. Supports GitHub-flavored Markdown (GFM): bold, italic, bullet lists, numbered lists, code blocks (fenced with ```), inline code, links, and blockquotes."],
                              "is_completed": ["type": "boolean", "description": "Mark task as completed or not"],
                              "priority": ["type": "string", "description": "Priority: low, medium, high, urgent"]],
                      required: ["id"]),
                 tool("delete_task", "Delete a task.",
                      props: ["id": ["type": "string", "description": "UUID of the task"]], required: ["id"]),
+                // Reviews
+                tool("list_reviews", "List all reviews for a specific objective, ordered by most recent first.",
+                     props: ["objective_id": ["type": "string", "description": "UUID of the objective"]], required: ["objective_id"]),
+                tool("get_review", "Get full detail of a review including all KR entries (status, trend, progress, blockers, next steps).",
+                     props: ["id": ["type": "string", "description": "UUID of the review"]], required: ["id"]),
+                tool("create_review", "Create a new review for an objective. Optionally include per-KR entries as a JSON array string in kr_entries.",
+                     props: ["objective_id": ["type": "string", "description": "UUID of the objective to review"],
+                             "review_type": ["type": "string", "description": "Type: weekly, midCycle, endCycle (default: weekly)"],
+                             "overall_notes": ["type": "string", "description": "Overall review notes and summary (supports Markdown)"],
+                             "kr_entries": ["type": "string", "description": "JSON array string of KR entries. Each: {\"kr_id\":\"uuid\",\"status\":\"onTrack|atRisk|offTrack|blocked\",\"trend\":\"up|down|flat\",\"completion_percent\":75,\"current_value\":75,\"target_value\":100,\"progress\":\"...\",\"blockers\":\"...\",\"next_steps\":\"...\",\"adjustment_notes\":\"...\",\"status_reason\":\"\"}"]],
+                     required: ["objective_id"]),
             ]
         }
     }
