@@ -104,7 +104,7 @@ struct ObjectiveListView: View {
             HStack(spacing: 20) {
                 Button {
                     selectedTabSettings = "ai"
-                    try? openSettings()
+                    openSettings()
                 } label: {
                     Image(systemName: "brain")
                         .foregroundStyle(AIService.shared.isConfigured ? .green : .secondary)
@@ -114,7 +114,7 @@ struct ObjectiveListView: View {
 
                 Button {
                     selectedTabSettings = "mcp"
-                    try? openSettings()
+                    openSettings()
                 } label: {
                     Image(systemName: "network")
                         .foregroundStyle(MCPServer.shared.isRunning ? .green : .secondary)
@@ -124,7 +124,7 @@ struct ObjectiveListView: View {
 
                 Button {
                     selectedTabSettings = "sync"
-                    try? openSettings()
+                    openSettings()
                 } label: {
                     Image(systemName: "icloud.fill")
                         .foregroundStyle(.green)

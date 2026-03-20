@@ -19,7 +19,7 @@ Before ending a session, update `docs/CHECKPOINT.md`:
 4. **Verify Build & Log Errors** - Run build and capture output:
 
    ```bash
-   cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build
+   cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build -destination 'platform=macOS,arch=arm64'
    ```
 
    - If **Build Succeeded** (✅): Proceed.

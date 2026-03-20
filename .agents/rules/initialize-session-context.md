@@ -15,7 +15,7 @@ trigger: always_on
 6. Verify build state locally:
 
 ```bash
-cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build > /tmp/build_log.txt 2>&1 || grep -A 5 -B 5 "error:" /tmp/build_log.txt
+cd src/SoloOKRs && xcodebuild -scheme SoloOKRs build -destination 'platform=macOS,arch=arm64' > /tmp/build_log.txt 2>&1 || grep -A 5 -B 5 "error:" /tmp/build_log.txt
 ```
 
 ## 🧠 Development Guidelines & Best Practices
