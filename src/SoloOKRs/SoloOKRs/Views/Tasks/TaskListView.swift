@@ -34,6 +34,8 @@ struct TaskListView: View {
                         ScrollView {
                             Markdown(task.taskDescription)
                                 .textSelection(.enabled)
+                                .markdownTheme(.gitHub)
+                                .markdownCodeSyntaxHighlighter(.splash)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding()
                         }

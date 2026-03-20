@@ -4,14 +4,13 @@
 // Updated on 2026-02-13: Simplified — no task types, no subtasks.
 
 import SwiftUI
+import MarkdownUI
 
 struct TaskDetailView: View {
     @Bindable var task: OKRTask
     let canEdit: Bool
     
-    private var markdownAttributedString: AttributedString {
-        (try? AttributedString(markdown: task.taskDescription)) ?? AttributedString(task.taskDescription)
-    }
+
     
     var body: some View {
         Form {
@@ -88,8 +87,10 @@ struct TaskDetailView: View {
                         Text("No description")
                             .foregroundStyle(.secondary)
                     } else {
-                        Text(markdownAttributedString)
+                        Markdown(task.taskDescription)
                             .textSelection(.enabled)
+                            .markdownTheme(.gitHub)
+                            .markdownCodeSyntaxHighlighter(.splash)
                     }
                 }
             }

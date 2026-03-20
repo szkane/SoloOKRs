@@ -5,6 +5,7 @@
 
 import SwiftUI
 import SwiftData
+import MarkdownUI
 
 struct EditTaskView: View {
     @Environment(\.dismiss) private var dismiss
@@ -80,9 +81,10 @@ struct EditTaskView: View {
                                     .foregroundStyle(.secondary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             } else {
-                                Text((try? AttributedString(markdown: task.taskDescription)) 
-                                     ?? AttributedString(task.taskDescription))
+                                Markdown(task.taskDescription)
                                     .textSelection(.enabled)
+                                    .markdownTheme(.gitHub)
+                                    .markdownCodeSyntaxHighlighter(.splash)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
