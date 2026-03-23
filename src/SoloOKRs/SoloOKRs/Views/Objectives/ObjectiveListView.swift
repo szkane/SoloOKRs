@@ -179,9 +179,7 @@ struct ObjectiveListView: View {
                         }
                         
                         if let result = analysisResult {
-                            Markdown(result)
-                                .textSelection(.enabled)
-                                .markdownTheme(.gitHub)
+                            AIResponseView(text: result, isStreaming: isAnalyzing)
                         } else {
                             ContentUnavailableView("No Analysis", systemImage: "text.magnifyingglass", description: Text("Run analysis to see feedback."))
                         }
