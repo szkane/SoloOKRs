@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: Only apply when the user requests to sync the session or end the current conversation.
 ---
 
 ## Session Sync Steps
