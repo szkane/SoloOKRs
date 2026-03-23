@@ -17,19 +17,26 @@ struct AIResponseView: View {
         let segments = ThinkingBlockParser.parse(text)
         
         VStack(alignment: .leading, spacing: 12) {
-            ForEach(segments) { segment in
-                switch segment.kind {
-                case .content:
-                    Markdown(segment.text)
-                        .textSelection(.enabled)
-                        .markdownTheme(.gitHub)
-                    
-                case .thinking:
-                    ThinkingBlockView(
-                        text: segment.text,
-                        isComplete: segment.isComplete,
-                        isStreaming: isStreaming
-                    )
+            if segments.isEmpty {
+                // Fallback: render as plain markdown if parser returns nothing
+                Markdown(text)
+                    .textSelection(.enabled)
+                    .markdownTheme(.gitHub)
+            } else {
+                ForEach(segments) { segment in
+                    switch segment.kind {
+                    case .content:
+                        Markdown(segment.text)
+                            .textSelection(.enabled)
+                            .markdownTheme(.gitHub)
+                        
+                    case .thinking:
+                        ThinkingBlockView(
+                            text: segment.text,
+                            isComplete: segment.isComplete,
+                            isStreaming: isStreaming
+                        )
+                    }
                 }
             }
         }
@@ -44,7 +51,6 @@ private struct ThinkingBlockView: View {
     let isStreaming: Bool
     
     @State private var isExpanded = false
-    @State private var isPulsing = false
     
     private var showAnimation: Bool {
         !isComplete && isStreaming
@@ -144,14 +150,25 @@ private struct ThinkingDotsView: View {
             
             1. **Make KRs more measurable** — Add specific numbers
             2. **Add time bounds** — Each KR should have a deadline
+            """,
+            isStreaming: false
+        )
+        .padding()
+    }
+    .frame(width: 500, height: 600)
+}
+
+#Preview("AI Response - Missing Open Tag") {
+    ScrollView {
+        AIResponseView(
+            text: """
+            We need to analyze given Objective and Key Results. Input Objective Title: Launch SoloOKRs App to AppStore. Description empty.
             
-            <think>
-            I should also mention the alignment between KRs and the objective.
-            </think>
+            Let's produce. </think>
             
-            ### Alignment
+            ## Overall Assessment
             
-            All key results align well with the stated objective.
+            Your OKR structure looks good!
             """,
             isStreaming: false
         )

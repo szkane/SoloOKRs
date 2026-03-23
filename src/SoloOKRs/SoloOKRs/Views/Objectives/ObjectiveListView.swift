@@ -6,7 +6,6 @@
 
 import SwiftUI
 import SwiftData
-import MarkdownUI
 
 struct ObjectiveListView: View {
     @Environment(\.modelContext) private var modelContext

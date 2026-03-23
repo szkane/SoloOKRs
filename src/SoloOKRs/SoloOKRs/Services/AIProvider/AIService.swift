@@ -354,9 +354,13 @@ class AIService {
                     let substring = buffer[rangeStart...]
                     if let rangeEnd = substring.firstIndex(of: "\"") {
                         let textRaw = String(buffer[rangeStart..<rangeEnd])
-                        // Handle basic escaped newlines
+                        // Handle basic JSON escape sequences
                         let text = textRaw.replacingOccurrences(of: "\\n", with: "\n")
                                           .replacingOccurrences(of: "\\\"", with: "\"")
+                                          .replacingOccurrences(of: "\\u003c", with: "<")
+                                          .replacingOccurrences(of: "\\u003e", with: ">")
+                                          .replacingOccurrences(of: "\\u003C", with: "<")
+                                          .replacingOccurrences(of: "\\u003E", with: ">")
                         if !text.isEmpty {
                             continuation.yield(text)
                         }
@@ -401,11 +405,30 @@ class AIService {
             throw AIError.apiError("Ollama HTTP \((response as? HTTPURLResponse)?.statusCode ?? -1)")
         }
         
+        var hasYieldedThinkOpen = false
+        var hasYieldedThinkClose = false
+        
         for try await line in bytes.lines {
             guard !Task.isCancelled else { break }
             guard let data = line.data(using: .utf8) else { continue }
             if let ollamaResponse = try? JSONDecoder().decode(OllamaGenerateResponse.self, from: data) {
-                continuation.yield(ollamaResponse.response)
+                // Handle thinking content from Ollama's dedicated thinking field
+                if let thinking = ollamaResponse.thinking, !thinking.isEmpty {
+                    if !hasYieldedThinkOpen {
+                        continuation.yield("<think>\n")
+                        hasYieldedThinkOpen = true
+                    }
+                    continuation.yield(thinking)
+                }
+                
+                // When response content starts, close the thinking block if it was open
+                if !ollamaResponse.response.isEmpty {
+                    if hasYieldedThinkOpen && !hasYieldedThinkClose {
+                        continuation.yield("\n</think>\n")
+                        hasYieldedThinkClose = true
+                    }
+                    continuation.yield(ollamaResponse.response)
+                }
             }
         }
     }
@@ -587,6 +610,7 @@ struct OllamaGenerateResponse: Codable {
     let model: String
     let response: String
     let done: Bool
+    let thinking: String?
 }
 
 // MARK: - OpenAI Compatible Chat Models

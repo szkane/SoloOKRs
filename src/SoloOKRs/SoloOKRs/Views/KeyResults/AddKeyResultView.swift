@@ -7,7 +7,6 @@
 
 import SwiftUI
 import SwiftData
-import MarkdownUI
 
 struct KRInput: Identifiable {
     let id = UUID()
@@ -175,7 +174,7 @@ struct AddKeyResultView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 16) {
                             if let result = evaluationResult {
-                                    AIResponseView(text: result, isStreaming: evaluatingId != nil)
+                                AIResponseView(text: result, isStreaming: evaluatingId != nil)
                             } else {
                                 ContentUnavailableView(LocalizedStringKey("No Evaluation"), systemImage: "sparkles", description: Text(LocalizedStringKey("Evaluation results will appear here.")))
                             }
