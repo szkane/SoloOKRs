@@ -63,7 +63,7 @@ struct AddTaskContent: View {
                 }
                 
                 Section(LocalizedStringKey("Priority")) {
-                    Picker(LocalizedStringKey("Priority"), selection: $priority) {
+                    Picker("", selection: $priority) {
                         ForEach(Priority.allCases, id: \.self) { priority in
                             Label(priority.displayName, systemImage: priority.icon)
                                 .tag(priority)
