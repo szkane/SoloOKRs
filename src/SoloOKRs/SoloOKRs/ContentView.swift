@@ -56,6 +56,13 @@ struct ContentView: View {
                 selectedKeyResult = nil
             }
         }
+        .onChange(of: objectives) { _, newValue in
+            // If objectives are cleared (e.g. from Sync settings), reset selections
+            if newValue.isEmpty {
+                selectedObjective = nil
+                selectedKeyResult = nil
+            }
+        }
     }
 }
 

@@ -68,7 +68,17 @@ struct SyncSettingsView: View {
     private func clearAllData() {
         DispatchQueue.main.async {
             do {
+                // Delete all top-level entities. 
+                // SwiftData batch deletion (modelContext.delete(model: Type.self))
+                // is efficient and should trigger cascades if rules are set correctly.
                 try modelContext.delete(model: Objective.self)
+                try modelContext.delete(model: OKRTask.self)
+                try modelContext.delete(model: OKRReview.self)
+                
+                // Explicitly delete dependent models just in case of orphaning
+                try modelContext.delete(model: KeyResult.self)
+                try modelContext.delete(model: KRReviewEntry.self)
+                
                 try modelContext.save()
             } catch {
                 errorMessage = "Failed to clear data: \(error.localizedDescription)"
@@ -79,4 +89,5 @@ struct SyncSettingsView: View {
 
 #Preview {
     SyncSettingsView()
+        .modelContainer(for: [Objective.self, KeyResult.self, OKRTask.self, OKRReview.self, KRReviewEntry.self], inMemory: true)
 }

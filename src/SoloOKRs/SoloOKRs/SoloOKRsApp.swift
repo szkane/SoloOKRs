@@ -73,6 +73,7 @@ struct SoloOKRsApp: App {
                 .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
                 .id(preferredLanguage)
         }
+        .modelContainer(sharedModelContainer)
         #endif
     }
     

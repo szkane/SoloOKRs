@@ -4,6 +4,7 @@
 // Created by Claude on 2026-02-04.
 
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     @AppStorage("selectedSettingsTab") private var selectedTab: String = "general"
@@ -46,4 +47,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
+        .modelContainer(for: [Objective.self, KeyResult.self, OKRTask.self, OKRReview.self, KRReviewEntry.self], inMemory: true)
 }
