@@ -39,12 +39,6 @@ struct SettingsView: View {
                     Label("Sync", systemImage: "icloud")
                 }
                 .tag("sync")
-
-            SubscriptionSettingsView()
-                .tabItem {
-                    Label("Subscription", systemImage: "creditcard")
-                }
-                .tag("subscription")
         }
         .frame(minWidth: 600, idealWidth: 700, minHeight: 450, idealHeight: 550)
     }
