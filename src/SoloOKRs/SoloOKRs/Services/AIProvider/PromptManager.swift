@@ -91,6 +91,11 @@ class PromptManager {
         template = template.replacingOccurrences(of: "{{objective.title}}", with: objective.title)
         template = template.replacingOccurrences(of: "{{objective.description}}", with: objective.objectiveDescription)
         
+        let startDateStr = objective.startDate.formatted(date: .abbreviated, time: .omitted)
+        let endDateStr = objective.endDate.formatted(date: .abbreviated, time: .omitted)
+        template = template.replacingOccurrences(of: "{{objective.startDate}}", with: startDateStr)
+        template = template.replacingOccurrences(of: "{{objective.endDate}}", with: endDateStr)
+        
         let krList = objective.keyResults.enumerated().map { i, kr in
             "\(i + 1). \(kr.title)"
         }.joined(separator: "\n")
@@ -159,13 +164,15 @@ class PromptManager {
             ## Input
             - Objective Title: {{objective.title}}
             - Objective Description: {{objective.description}}
+            - Start Date: {{objective.startDate}}
+            - End Date: {{objective.endDate}}
             - Key Results:
             {{kr_list}}
             - Tasks:
             {{task_list}}
             
             ## Analysis Criteria
-            1. Is the Objective inspirational, qualitative, and time-bound?
+            1. Is the Objective inspirational, qualitative, and time-bound (consider start and end dates)?
             2. For each KR, evaluate:
                - Alignment with the Objective
                - Measurability (has clear metrics)
@@ -175,10 +182,13 @@ class PromptManager {
             3. Do the KRs collectively cover the Objective sufficiently?
             
             ## Output
-            Provide structured Markdown feedback with:
-            - Overall assessment
-            - Per-KR analysis (✅ strengths / ⚠️ improvements)
-            - Suggested optimized KR rewrites (if applicable)
+            Provide a CONCISE Markdown summary (max 3-4 sentences per section). 
+            Do NOT output overly long prose. Focus on actionable insights.
+            IMPORTANT: Perfection is not the goal. Once the OKRs satisfy the basic criteria above, tell the user they are ready, and explicitly inform them that they can publish the OKR to Active and begin tracking their progress. 
+            Include:
+            - Overall Assessment
+            - Per-KR action items (✅ / ⚠️)
+            - 1-2 Next Steps for the user
             
             **Output language: {{currentLanguage}}**
             """
@@ -191,7 +201,8 @@ class PromptManager {
             Objective: "{{objective.title}}"
             Context: "{{objective.description}}"
             
-            Return ONLY a JSON array of strings. No markdown, no explanation.
+            Return ONLY a JSON array of strings.
+            Each Key Result must be a complete, single sentence that is easy to read. No markdown, no explanation outside the JSON array.
             **Output language: {{currentLanguage}}**
             """
             
@@ -209,11 +220,14 @@ class PromptManager {
             4. Outcome-oriented — Is it a result, not a task/output?
             5. Ambitious but realistic — Is it stretching yet achievable?
             
-            Provide:
-            - A brief verdict for each criterion (✅ / ⚠️ / ❌)
-            - One optimized rewrite of the KR that meets all criteria
+            ## Output
+            Provide an EXTREMELY CONCISE Markdown summary. Restrict output length.
+            Include:
+            - A quick verdict using ✅ or ⚠️.
+            - A brief explanation (1-2 sentences).
+            - Next Step guidance on how the user should refine the KR.
             
-            Format as Markdown. Mark the optimized KR with `> **Suggested:** ...` so the user can identify and copy it.
+            Mark the optimized KR with `> **Suggested:** ...` so the user can easily read and copy it.
             **Output language: {{currentLanguage}}**
             """
         }

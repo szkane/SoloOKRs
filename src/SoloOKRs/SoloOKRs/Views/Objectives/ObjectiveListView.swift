@@ -473,9 +473,11 @@ struct ObjectiveRowView: View {
             .padding(.top, 2)
             
             VStack(alignment: .leading, spacing: 4) {
-                HStack {
+                HStack(alignment: .top) {
                     Text(objective.title)
                         .font(.headline)
+                        .lineLimit(2, reservesSpace: true)
+                        .multilineTextAlignment(.leading)
                     
                     Spacer()
                     

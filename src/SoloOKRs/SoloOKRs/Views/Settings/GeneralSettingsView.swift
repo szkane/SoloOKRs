@@ -10,6 +10,7 @@ struct GeneralSettingsView: View {
     @AppStorage("showInMenuBar") private var showInMenuBar = false
     @AppStorage("defaultView") private var defaultView = "objectives"
     @AppStorage("preferredLanguage") private var preferredLanguage = ""
+    @AppStorage("appTheme") private var appTheme = "system"
 
     var body: some View {
         Form {
@@ -44,8 +45,12 @@ struct GeneralSettingsView: View {
             }
 
             Section("Appearance") {
-                Text("Theme follows system settings")
-                    .foregroundStyle(.secondary)
+                Picker("Theme", selection: $appTheme) {
+                    Text("System").tag("system")
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
             }
         }
         .formStyle(.grouped)

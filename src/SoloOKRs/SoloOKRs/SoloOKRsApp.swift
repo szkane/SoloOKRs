@@ -9,6 +9,15 @@ import SwiftData
 @main
 struct SoloOKRsApp: App {
     @AppStorage("preferredLanguage") private var preferredLanguage = ""
+    @AppStorage("appTheme") private var appTheme = "system"
+    
+    private var colorScheme: ColorScheme? {
+        switch appTheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
+        }
+    }
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -34,6 +43,7 @@ struct SoloOKRsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(colorScheme)
                 .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
                 .id(preferredLanguage) // Force redraw when language changes
                 .onAppear {
@@ -51,6 +61,7 @@ struct SoloOKRsApp: App {
         // Edit Task Window - resizable and movable
         Window(Text(verbatim: localizedTitle("Edit Task")), id: "editTask") {
             EditTaskWindowView()
+                .preferredColorScheme(colorScheme)
                 .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
                 .id(preferredLanguage)
         }
@@ -61,6 +72,7 @@ struct SoloOKRsApp: App {
         // Add Task Window - resizable and movable
         Window(Text(verbatim: localizedTitle("New Task")), id: "addTask") {
             AddTaskWindowView()
+                .preferredColorScheme(colorScheme)
                 .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
                 .id(preferredLanguage)
         }
@@ -70,6 +82,7 @@ struct SoloOKRsApp: App {
         
         Settings {
             SettingsView()
+                .preferredColorScheme(colorScheme)
                 .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
                 .id(preferredLanguage)
         }
