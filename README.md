@@ -54,6 +54,8 @@ This README is available in multiple languages to help developers around the wor
 
 ### Core OKR Management
 
+![[/docs/screenshots/SoloOKRs_screenshot_1.png]]
+
 | Feature         | Description                                                                        |
 | --------------- | ---------------------------------------------------------------------------------- |
 | **Objectives**  | Create, edit, and archive objectives with progress tracking                        |
@@ -63,6 +65,9 @@ This README is available in multiple languages to help developers around the wor
 | **Drag & Drop** | Reorder objectives and key results with drag-and-drop                              |
 
 ### 🧠 AI Integration
+
+![[/docs/screenshots/SoloOKRs_screenshot_2.png]]
+![[/docs/screenshots/SoloOKRs_screenshot_3.png]]
 
 SoloOKRs includes a built-in AI assistant that can help you at every stage of the OKR lifecycle:
 
@@ -85,6 +90,8 @@ SoloOKRs includes a built-in AI assistant that can help you at every stage of th
 5. AI responses include **thinking block** visualization — collapsible blocks that show the AI's reasoning process
 
 ### 🔌 MCP Server (Model Context Protocol)
+
+![[/docs/screenshots/SoloOKRs_screenshot_4.png]]
 
 SoloOKRs includes a built-in **MCP server** that exposes your OKR data to external AI assistants. This enables tools like **Claude Desktop** to read and manipulate your goals directly.
 
