@@ -17,7 +17,7 @@ struct TaskListView: View {
     var body: some View {
         VSplitView {
             List(selection: $selectedTaskID) {
-                ForEach(keyResult.tasks) { task in
+                ForEach(keyResult.tasks.sorted(by: { $0.createdAt < $1.createdAt })) { task in
                     TaskRowView(task: task, selectedTaskID: $selectedTaskID)
                         .tag(task.id)
                 }
