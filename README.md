@@ -67,7 +67,6 @@ This README is available in multiple languages to help developers around the wor
 ### 🧠 AI Integration
 
  <img src="docs/screenshots/SoloOKRs_screenshot_2.png" />
- <img src="docs/screenshots/SoloOKRs_screenshot_3.png" />
 
 SoloOKRs includes a built-in AI assistant that can help you at every stage of the OKR lifecycle:
 
@@ -157,6 +156,8 @@ SoloOKRs includes a structured **review/retrospective** workflow:
 5. **Markdown Notes** — Write rich review notes with full Markdown + code syntax highlighting
 
 ### 🎨 Customizable AI Prompts
+
+ <img src="docs/screenshots/SoloOKRs_screenshot_3.png" />
 
 Tailor the AI's behavior through **Settings → Prompts**:
 
