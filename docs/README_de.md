@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/SoloOKRs/SoloOKRs/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="SoloOKRs Icon">
+  <img src="../src/SoloOKRs/SoloOKRs/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="SoloOKRs Icon">
 </p>
 
 <h1 align="center">SoloOKRs</h1>
@@ -35,15 +35,15 @@ Was es besonders macht:
 
 Dieses README ist in mehreren Sprachen verfügbar, um Entwicklern weltweit zu helfen:
 
-| Sprache | Link |
-|---------|------|
-| Englisch | [README.md](README.md) |
-| 简体中文 | [docs/README_zh.md](docs/README_zh.md) |
-| 日本語 | [docs/README_ja.md](docs/README_ja.md) |
-| 한국어 | [docs/README_ko.md](docs/README_ko.md) |
-| Deutsch | [docs/README_de.md](docs/README_de.md) |
-| Französisch | [docs/README_fr.md](docs/README_fr.md) |
-| Spanisch | [docs/README_es.md](docs/README_es.md) |
+| Sprache            | Link                                       |
+| ------------------ | ------------------------------------------ |
+| Englisch           | [README.md](README.md)                     |
+| 简体中文           | [docs/README_zh.md](docs/README_zh.md)     |
+| 日本語             | [docs/README_ja.md](docs/README_ja.md)     |
+| 한국어             | [docs/README_ko.md](docs/README_ko.md)     |
+| Deutsch            | [docs/README_de.md](docs/README_de.md)     |
+| Französisch        | [docs/README_fr.md](docs/README_fr.md)     |
+| Spanisch           | [docs/README_es.md](docs/README_es.md)     |
 | Portugiesisch (BR) | [docs/README_ptBR.md](docs/README_ptBR.md) |
 
 ---
@@ -52,13 +52,13 @@ Dieses README ist in mehreren Sprachen verfügbar, um Entwicklern weltweit zu he
 
 ### Kern-OKR-Verwaltung
 
-| Funktion | Beschreibung |
-|----------|--------------|
-| **Ziele (Objectives)** | Erstellen, bearbeiten und archivieren Sie Ziele mit Fortschrittsverfolgung |
+| Funktion                              | Beschreibung                                                                                         |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Ziele (Objectives)**                | Erstellen, bearbeiten und archivieren Sie Ziele mit Fortschrittsverfolgung                           |
 | **Schlüsselergebnisse (Key Results)** | Definieren Sie messbare Schlüsselergebnisse mit verschiedenen Typen (Prozentsatz, Zahl, Meilenstein) |
-| **Aufgaben** | Schließen Sie Schlüsselergebnisse in umsetzbare Aufgaben mit Markdown-Beschreibungen auf |
-| **Archiv** | Archiveren Sie abgeschlossene Ziele mit einem mit Trophäen markierten Archivbereich |
-| **Drag & Drop** | Sortieren Sie Ziele und Schlüsselergebnisse per Drag-and-Drop |
+| **Aufgaben**                          | Schließen Sie Schlüsselergebnisse in umsetzbare Aufgaben mit Markdown-Beschreibungen auf             |
+| **Archiv**                            | Archiveren Sie abgeschlossene Ziele mit einem mit Trophäen markierten Archivbereich                  |
+| **Drag & Drop**                       | Sortieren Sie Ziele und Schlüsselergebnisse per Drag-and-Drop                                        |
 
 ### 🧠 KI-Integration
 
@@ -66,13 +66,13 @@ SoloOKRs enthält einen integrierten KI-Assistenten, der Sie bei jedem Schritt d
 
 **Unterstützte Anbieter:**
 
-| Anbieter | Typ | Beschreibung |
-|----------|-----|--------------|
-| **Gemini** | Cloud | Googles Gemini-Modelle |
-| **OpenAI** | Cloud | GPT-4o und andere OpenAI-Modelle |
-| **Anthropic** | Cloud | Claude-Modelle |
-| **Ollama** | Lokal | Lokale LLMs ausführen (Llama, Mistral, usw.) |
-| **LM Studio** | Lokal | Lokaler Modell-Inferenz-Server |
+| Anbieter      | Typ   | Beschreibung                                 |
+| ------------- | ----- | -------------------------------------------- |
+| **Gemini**    | Cloud | Googles Gemini-Modelle                       |
+| **OpenAI**    | Cloud | GPT-4o und andere OpenAI-Modelle             |
+| **Anthropic** | Cloud | Claude-Modelle                               |
+| **Ollama**    | Lokal | Lokale LLMs ausführen (Llama, Mistral, usw.) |
+| **LM Studio** | Lokal | Lokaler Modell-Inferenz-Server               |
 
 **So verwenden Sie es:**
 
@@ -88,19 +88,19 @@ SoloOKRs enthält einen integrierten **MCP-Server**, der Ihre OKR-Daten für ext
 
 **Transport-Optionen:**
 
-| Transport | Protokoll | Anwendungsfall |
-|-----------|-----------|----------------|
-| **HTTP** | `http://localhost:<port>` | Universeller Zugriff, webbasierte Tools |
-| **Unix Domain Sockets** | `/tmp/solookrs.sock` | Claude Desktop, lokale Tools (geringere Latenz) |
+| Transport               | Protokoll                 | Anwendungsfall                                  |
+| ----------------------- | ------------------------- | ----------------------------------------------- |
+| **HTTP**                | `http://localhost:<port>` | Universeller Zugriff, webbasierte Tools         |
+| **Unix Domain Sockets** | `/tmp/solookrs.sock`      | Claude Desktop, lokale Tools (geringere Latenz) |
 
 **Verfügbare MCP-Tools (12 Tools):**
 
-| Kategorie | Tools |
-|-----------|-------|
-| **Ziele (Objectives)** | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` |
-| **Schlüsselergebnisse (Key Results)** | `list_key_results`, `update_key_result` |
-| **Aufgaben (Tasks)** | `list_tasks`, `create_task`, `update_task` |
-| **Überprüfungen (Reviews)** | `list_reviews`, `get_review`, `create_review` |
+| Kategorie                             | Tools                                                                                          |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Ziele (Objectives)**                | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` |
+| **Schlüsselergebnisse (Key Results)** | `list_key_results`, `update_key_result`                                                        |
+| **Aufgaben (Tasks)**                  | `list_tasks`, `create_task`, `update_task`                                                     |
+| **Überprüfungen (Reviews)**           | `list_reviews`, `get_review`, `create_review`                                                  |
 
 **Claude Desktop-Integration:**
 
@@ -182,6 +182,7 @@ SoloOKRs/
 ```
 
 **UI-Layout:** 3-spaltiger `NavigationSplitView`
+
 - **Spalte 1 (Seitenleiste):** Objektive-Liste mit Statusleiste (KI/MCP/Sync-Anzeigen)
 - **Spalte 2 (Inhalt):** Schlüsselergebnisse für das ausgewählte Ziel
 - **Spalte 3 (Detail):** Aufgaben für das ausgewählte Schlüsselergebnis
@@ -194,17 +195,17 @@ SoloOKRs/
 
 SoloOKRs unterstützt **9 Sprachen** mit Echtzeit-Wechsel (kein Neustart erforderlich):
 
-| Sprache | Code |
-|---------|------|
-| Englisch | `en` |
-| Chinesisch (Vereinfacht) (简体中文) | `zh-Hans` |
-| Chinesisch (Traditionell) (繁體中文) | `zh-Hant` |
-| Japanisch (日本語) | `ja` |
-| Koreanisch (한국어) | `ko` |
-| Deutsch | `de` |
-| Französisch (Français) | `fr` |
-| Spanisch (Español) | `es` |
-| Portugiesisch – Brasilien (Português) | `pt-BR` |
+| Sprache                               | Code      |
+| ------------------------------------- | --------- |
+| Englisch                              | `en`      |
+| Chinesisch (Vereinfacht) (简体中文)   | `zh-Hans` |
+| Chinesisch (Traditionell) (繁體中文)  | `zh-Hant` |
+| Japanisch (日本語)                    | `ja`      |
+| Koreanisch (한국어)                   | `ko`      |
+| Deutsch                               | `de`      |
+| Französisch (Français)                | `fr`      |
+| Spanisch (Español)                    | `es`      |
+| Portugiesisch – Brasilien (Português) | `pt-BR`   |
 
 Sprache ändern über **Einstellungen → Allgemein → App-Sprache**.
 
@@ -275,6 +276,7 @@ Dieses Projekt steht unter der **Creative Commons Attribution-NonCommercial-NoDe
 ### ⚠️ Kommerzielle Nutzung ist streng verboten
 
 Dies umfasst unter anderem:
+
 - Verkauf oder Verbreitung der Anwendung zum Gewinn
 - Verwendung der Codebasis in kommerziellen Produkten oder Diensten
 - Angebot bezahlter Dienstleistungen auf Basis dieser Software

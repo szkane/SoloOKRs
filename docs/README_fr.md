@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/SoloOKRs/SoloOKRs/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="Icône SoloOKRs">
+  <img src="../src/SoloOKRs/SoloOKRs/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="Icône SoloOKRs">
 </p>
 
 <h1 align="center">SoloOKRs</h1>
@@ -35,15 +35,15 @@ Ce qui la rend spéciale :
 
 Ce README est disponible en plusieurs langues pour aider les développeurs du monde entier :
 
-| Langue | Lien |
-|--------|------|
-| Anglais | [README.md](README.md) |
-| 简体中文 | [docs/README_zh.md](docs/README_zh.md) |
-| 日本語 | [docs/README_ja.md](docs/README_ja.md) |
-| 한국어 | [docs/README_ko.md](docs/README_ko.md) |
-| Allemand | [docs/README_de.md](docs/README_de.md) |
-| Français | [docs/README_fr.md](docs/README_fr.md) |
-| Español | [docs/README_es.md](docs/README_es.md) |
+| Langue         | Lien                                       |
+| -------------- | ------------------------------------------ |
+| Anglais        | [README.md](README.md)                     |
+| 简体中文       | [docs/README_zh.md](docs/README_zh.md)     |
+| 日本語         | [docs/README_ja.md](docs/README_ja.md)     |
+| 한국어         | [docs/README_ko.md](docs/README_ko.md)     |
+| Allemand       | [docs/README_de.md](docs/README_de.md)     |
+| Français       | [docs/README_fr.md](docs/README_fr.md)     |
+| Español        | [docs/README_es.md](docs/README_es.md)     |
 | Portugais (BR) | [docs/README_ptBR.md](docs/README_ptBR.md) |
 
 ---
@@ -52,13 +52,13 @@ Ce README est disponible en plusieurs langues pour aider les développeurs du mo
 
 ### Gestion d'OKR fondamentale
 
-| Fonctionnalité | Description |
-|----------------|-------------|
-| **Objectifs** | Créez, modifiez et archivez des objectifs avec suivi de progression |
-| **Résultats clés** | Définissez des résultats clés mesurables avec différents types (pourcentage, nombre, jalon) |
-| **Tâches** | Décomposez les résultats clés en tâches actionnables avec des descriptions Markdown |
-| **Archives** | Archivez les objectifs terminés avec une section archive marquée d'un trophée |
-| **Glisser-déposer** | Réorganisez les objectifs et résultats clés par glisser-déposer |
+| Fonctionnalité      | Description                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| **Objectifs**       | Créez, modifiez et archivez des objectifs avec suivi de progression                         |
+| **Résultats clés**  | Définissez des résultats clés mesurables avec différents types (pourcentage, nombre, jalon) |
+| **Tâches**          | Décomposez les résultats clés en tâches actionnables avec des descriptions Markdown         |
+| **Archives**        | Archivez les objectifs terminés avec une section archive marquée d'un trophée               |
+| **Glisser-déposer** | Réorganisez les objectifs et résultats clés par glisser-déposer                             |
 
 ### 🧠 Intégration IA
 
@@ -66,13 +66,13 @@ SoloOKRs inclut un assistant IA intégré qui peut vous aider à chaque étape d
 
 **Fournisseurs supportés :**
 
-| Fournisseur | Type | Description |
-|-------------|------|-------------|
-| **Gemini** | Cloud | Modèles Gemini de Google |
-| **OpenAI** | Cloud | GPT-4o et autres modèles OpenAI |
-| **Anthropic** | Cloud | Modèles Claude |
-| **Ollama** | Local | Exécutez des LLMs locaux (Llama, Mistral, etc.) |
-| **LM Studio** | Local | Serveur d'inférence de modèles locaux |
+| Fournisseur   | Type  | Description                                     |
+| ------------- | ----- | ----------------------------------------------- |
+| **Gemini**    | Cloud | Modèles Gemini de Google                        |
+| **OpenAI**    | Cloud | GPT-4o et autres modèles OpenAI                 |
+| **Anthropic** | Cloud | Modèles Claude                                  |
+| **Ollama**    | Local | Exécutez des LLMs locaux (Llama, Mistral, etc.) |
+| **LM Studio** | Local | Serveur d'inférence de modèles locaux           |
 
 **Comment utiliser :**
 
@@ -88,19 +88,19 @@ SoloOKRs inclut un **serveur MCP** intégré qui expose vos données OKR aux ass
 
 **Options de transport :**
 
-| Transport | Protocole | Cas d'utilisation |
-|-----------|----------|-------------------|
-| **HTTP** | `http://localhost:<port>` | Accès universel, outils basés sur le web |
-| **Sockets de domaine Unix** | `/tmp/solookrs.sock` | Claude Desktop, outils locaux (latence réduite) |
+| Transport                   | Protocole                 | Cas d'utilisation                               |
+| --------------------------- | ------------------------- | ----------------------------------------------- |
+| **HTTP**                    | `http://localhost:<port>` | Accès universel, outils basés sur le web        |
+| **Sockets de domaine Unix** | `/tmp/solookrs.sock`      | Claude Desktop, outils locaux (latence réduite) |
 
 **Outils MCP disponibles (12 outils) :**
 
-| Catégorie | Outils |
-|-----------|--------|
-| **Objectifs** | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` |
-| **Résultats clés** | `list_key_results`, `update_key_result` |
-| **Tâches** | `list_tasks`, `create_task`, `update_task` |
-| **Révisions** | `list_reviews`, `get_review`, `create_review` |
+| Catégorie          | Outils                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------- |
+| **Objectifs**      | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` |
+| **Résultats clés** | `list_key_results`, `update_key_result`                                                        |
+| **Tâches**         | `list_tasks`, `create_task`, `update_task`                                                     |
+| **Révisions**      | `list_reviews`, `get_review`, `create_review`                                                  |
 
 **Intégration Claude Desktop :**
 
@@ -182,6 +182,7 @@ SoloOKRs/
 ```
 
 **Disposition UI :** `NavigationSplitView` à 3 colonnes
+
 - **Colonne 1 (Barre latérale) :** Liste des objectifs avec barre de statut (indicateurs IA/MCP/Sync)
 - **Colonne 2 (Contenu) :** Résultats clés pour l'objectif sélectionné
 - **Colonne 3 (Détail) :** Tâches pour le résultat clé sélectionné
@@ -194,17 +195,17 @@ SoloOKRs/
 
 SoloOKRs supporte **9 langues** avec changement en temps réel (aucun redémarrage requis) :
 
-| Langue | Code |
-|--------|------|
-| Anglais | `en` |
-| Chinois simplifié (简体中文) | `zh-Hans` |
+| Langue                          | Code      |
+| ------------------------------- | --------- |
+| Anglais                         | `en`      |
+| Chinois simplifié (简体中文)    | `zh-Hans` |
 | Chinois traditionnel (繁體中文) | `zh-Hant` |
-| Japonais (日本語) | `ja` |
-| Coréen (한국어) | `ko` |
-| Allemand (Deutsch) | `de` |
-| Français (Français) | `fr` |
-| Espagnol (Español) | `es` |
-| Portugais - Brésil (Português) | `pt-BR` |
+| Japonais (日本語)               | `ja`      |
+| Coréen (한국어)                 | `ko`      |
+| Allemand (Deutsch)              | `de`      |
+| Français (Français)             | `fr`      |
+| Espagnol (Español)              | `es`      |
+| Portugais - Brésil (Português)  | `pt-BR`   |
 
 Changez de langue via **Réglages → Général → Langue de l'app**.
 
@@ -275,6 +276,7 @@ Ce projet est sous licence **Creative Commons Attribution-Pas d'Utilisation Comm
 ### ⚠️ L'utilisation commerciale est strictement interdite
 
 Cela inclut, mais n'est pas limité à :
+
 - La vente ou la distribution de l'application à des fins lucratives
 - L'utilisation de la base de code dans des produits ou services commerciaux
 - L'offre de services payants basés sur ce logiciel
