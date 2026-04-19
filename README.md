@@ -19,7 +19,9 @@
 
 ## ✨ What is SoloOKRs?
 
-SoloOKRs is a **native macOS application** for managing personal goals using the **OKR (Objectives and Key Results)** framework. Unlike team-oriented OKR tools, SoloOKRs is designed for individuals who want a focused, distraction-free environment to set, track, and reflect on their personal goals. This project was built in a vibe-coding workflow with Google Antigravity.
+SoloOKRs is a **native macOS application** for managing personal goals using the **OKR (Objectives and Key Results)** framework. Unlike team-oriented OKR tools, SoloOKRs is designed for OPC (One Person Company) founders and individuals who want a focused, distraction-free environment to set, track, and reflect on their personal goals. This project was built in a vibe-coding workflow with Google Antigravity.
+
+In the AI era, SoloOKRs is also a **bridge between humans and AI agents** — a tool that helps align your goals with AI assistants so they can help you set objectives, track progress, complete key results, and conduct retrospectives.
 
 What makes it special:
 
@@ -35,15 +37,15 @@ What makes it special:
 
 This README is available in multiple languages to help developers around the world:
 
-| Language | Link |
-|----------|------|
-| English | [README.md](README.md) |
-| 简体中文 | [docs/README_zh.md](docs/README_zh.md) |
-| 日本語 | [docs/README_ja.md](docs/README_ja.md) |
-| 한국어 | [docs/README_ko.md](docs/README_ko.md) |
-| Deutsch | [docs/README_de.md](docs/README_de.md) |
-| Français | [docs/README_fr.md](docs/README_fr.md) |
-| Español | [docs/README_es.md](docs/README_es.md) |
+| Language       | Link                                       |
+| -------------- | ------------------------------------------ |
+| English        | [README.md](README.md)                     |
+| 简体中文       | [docs/README_zh.md](docs/README_zh.md)     |
+| 日本語         | [docs/README_ja.md](docs/README_ja.md)     |
+| 한국어         | [docs/README_ko.md](docs/README_ko.md)     |
+| Deutsch        | [docs/README_de.md](docs/README_de.md)     |
+| Français       | [docs/README_fr.md](docs/README_fr.md)     |
+| Español        | [docs/README_es.md](docs/README_es.md)     |
 | Português (BR) | [docs/README_ptBR.md](docs/README_ptBR.md) |
 
 ---
@@ -52,13 +54,13 @@ This README is available in multiple languages to help developers around the wor
 
 ### Core OKR Management
 
-| Feature | Description |
-|---------|-------------|
-| **Objectives** | Create, edit, and archive objectives with progress tracking |
+| Feature         | Description                                                                        |
+| --------------- | ---------------------------------------------------------------------------------- |
+| **Objectives**  | Create, edit, and archive objectives with progress tracking                        |
 | **Key Results** | Define measurable key results with different types (percentage, number, milestone) |
-| **Tasks** | Break down key results into actionable tasks with Markdown descriptions |
-| **Archives** | Archive completed objectives with a trophy-marked archive section |
-| **Drag & Drop** | Reorder objectives and key results with drag-and-drop |
+| **Tasks**       | Break down key results into actionable tasks with Markdown descriptions            |
+| **Archives**    | Archive completed objectives with a trophy-marked archive section                  |
+| **Drag & Drop** | Reorder objectives and key results with drag-and-drop                              |
 
 ### 🧠 AI Integration
 
@@ -66,13 +68,13 @@ SoloOKRs includes a built-in AI assistant that can help you at every stage of th
 
 **Supported Providers:**
 
-| Provider | Type | Description |
-|----------|------|-------------|
-| **Gemini** | Cloud | Google's Gemini models |
-| **OpenAI** | Cloud | GPT-4o and other OpenAI models |
-| **Anthropic** | Cloud | Claude models |
-| **Ollama** | Local | Run local LLMs (Llama, Mistral, etc.) |
-| **LM Studio** | Local | Local model inference server |
+| Provider      | Type  | Description                           |
+| ------------- | ----- | ------------------------------------- |
+| **Gemini**    | Cloud | Google's Gemini models                |
+| **OpenAI**    | Cloud | GPT-4o and other OpenAI models        |
+| **Anthropic** | Cloud | Claude models                         |
+| **Ollama**    | Local | Run local LLMs (Llama, Mistral, etc.) |
+| **LM Studio** | Local | Local model inference server          |
 
 **How to use:**
 
@@ -88,19 +90,19 @@ SoloOKRs includes a built-in **MCP server** that exposes your OKR data to extern
 
 **Transport Options:**
 
-| Transport | Protocol | Use Case |
-|-----------|----------|----------|
-| **HTTP** | `http://localhost:<port>` | Universal access, web-based tools |
-| **Unix Domain Sockets** | `/tmp/solookrs.sock` | Claude Desktop, local tools (lower latency) |
+| Transport               | Protocol                  | Use Case                                    |
+| ----------------------- | ------------------------- | ------------------------------------------- |
+| **HTTP**                | `http://localhost:<port>` | Universal access, web-based tools           |
+| **Unix Domain Sockets** | `/tmp/solookrs.sock`      | Claude Desktop, local tools (lower latency) |
 
 **Available MCP Tools (12 tools):**
 
-| Category | Tools |
-|----------|-------|
-| **Objectives** | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` |
-| **Key Results** | `list_key_results`, `update_key_result` |
-| **Tasks** | `list_tasks`, `create_task`, `update_task` |
-| **Reviews** | `list_reviews`, `get_review`, `create_review` |
+| Category        | Tools                                                                                          |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| **Objectives**  | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` |
+| **Key Results** | `list_key_results`, `update_key_result`                                                        |
+| **Tasks**       | `list_tasks`, `create_task`, `update_task`                                                     |
+| **Reviews**     | `list_reviews`, `get_review`, `create_review`                                                  |
 
 **Claude Desktop Integration:**
 
@@ -182,6 +184,7 @@ SoloOKRs/
 ```
 
 **UI Layout:** 3-column `NavigationSplitView`
+
 - **Column 1 (Sidebar):** Objective list with status bar (AI/MCP/Sync indicators)
 - **Column 2 (Content):** Key results for the selected objective
 - **Column 3 (Detail):** Tasks for the selected key result
@@ -194,17 +197,17 @@ SoloOKRs/
 
 SoloOKRs supports **9 languages** with real-time switching (no restart required):
 
-| Language | Code |
-|----------|------|
-| English | `en` |
-| Simplified Chinese (简体中文) | `zh-Hans` |
-| Traditional Chinese (繁體中文) | `zh-Hant` |
-| Japanese (日本語) | `ja` |
-| Korean (한국어) | `ko` |
-| German (Deutsch) | `de` |
-| French (Français) | `fr` |
-| Spanish (Español) | `es` |
-| Portuguese - Brazil (Português) | `pt-BR` |
+| Language                        | Code      |
+| ------------------------------- | --------- |
+| English                         | `en`      |
+| Simplified Chinese (简体中文)   | `zh-Hans` |
+| Traditional Chinese (繁體中文)  | `zh-Hant` |
+| Japanese (日本語)               | `ja`      |
+| Korean (한국어)                 | `ko`      |
+| German (Deutsch)                | `de`      |
+| French (Français)               | `fr`      |
+| Spanish (Español)               | `es`      |
+| Portuguese - Brazil (Português) | `pt-BR`   |
 
 Change language via **Settings → General → App Language**.
 
@@ -275,6 +278,7 @@ This project is licensed under the **Creative Commons Attribution-NonCommercial-
 ### ⚠️ Commercial Use is Strictly Prohibited
 
 This includes but is not limited to:
+
 - Selling or distributing the application for profit
 - Using the codebase in commercial products or services
 - Offering paid services based on this software

@@ -19,7 +19,9 @@
 
 ## ✨ ¿Qué es SoloOKRs?
 
-SoloOKRs es una **aplicación nativa para macOS** para gestionar objetivos personales utilizando el framework de **OKR (Objectives and Key Results)**. A diferencia de las herramientas de OKR orientadas a equipos, SoloOKRs está diseñada para individuos que desean un entorno centrado y libre de distracciones para establecer, seguir y reflexionar sobre sus objetivos personales. Este proyecto se construyó mediante un flujo de trabajo de vibe-coding con Google Antigravity.
+SoloOKRs es una **aplicación nativa de macOS** para la gestión de objetivos personales utilizando el framework **OKR (Objectives and Key Results)**. A diferencia de las herramientas OKR orientadas a equipos, SoloOKRs está diseñado para fundadores de OPC (One Person Company) e individuos que desean un entorno enfocado y libre de distracciones para definir, rastrear y reflexionar sobre sus objetivos personales. Este proyecto fue construido en un flujo de vibe-coding con Google Antigravity.
+
+En la era de la IA, SoloOKRs es también un **puente entre humanos y agentes de IA** — una herramienta que ayuda a alinear tus objetivos con asistentes de IA para que puedan ayudarte a establecer objetivos, rastrear el progreso, completar resultados clave y realizar retrospectivas.
 
 Lo que la hace especial:
 

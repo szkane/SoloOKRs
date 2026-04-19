@@ -19,7 +19,9 @@
 
 ## ✨ SoloOKRs とは？
 
-SoloOKRs は、**OKR（Objectives and Key Results）フレームワーク**を用いてパーソナルゴールを管理するための**ネイティブ macOS アプリケーション**です。チーム向けの OKR ツールとは異なり、SoloOKRs は個人の目標を設定・追跡・振り返るために集中でき、気晴らしのない環境を重視して設計されています。このプロジェクトは Google Antigravity との vibe-coding ワークフローで構築されました。
+SoloOKRs は、**OKR（Objectives and Key Results）フレームワーク**を用いてパーソナルゴールを管理するための**ネイティブ macOS アプリケーション**です。チーム向けの OKR ツールとは異なり、SoloOKRs は OPC（One Person Company）創設者や個人向けに設計されており、集中できて気晴らしのない環境で個人の目標を設定・追跡・振り返ることができます。このプロジェクトは Google Antigravity との vibe-coding ワークフローで構築されました。
+
+AI の時代において、SoloOKRs は**人間と AI Agent の間の架け橋**でもあります — 目標を AI アシスタントと同期し、AI による目標設定、進捗追跡、キー結果の達成、振り返りを支援するためのツールです。
 
 特別な機能：
 
