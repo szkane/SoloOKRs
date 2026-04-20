@@ -1,6 +1,6 @@
-> **Last Session:** 2026-04-19 10:30
-> **Current Phase:** Beta 8 Enhancements
-> **Build Status:** ✅ (verified 2026-04-19 10:30)
+> **Last Session:** 2026-04-20 10:49
+> **Current Phase:** Bugfixing & Release Prep
+> **Build Status:** ✅ (verified 2026-04-20 10:49)
 
 ---
 
@@ -52,11 +52,9 @@
 
 | Date       | Summary                                                                                                                                                                                                                                                                                                                                                               |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-20 | **Task Deletion Fix:** Fixed an empty closure issue where tasks were not actually being deleted when selecting 'Delete' in the task context menu. Injected modelContext and properly cleared selection states. Build ✅ |
 | 2026-04-19 | **AI-Human Alignment README:** Added OPC (One Person Company) focus and AI-human alignment description across all 8 README versions. SoloOKRs positioned as a bridge between humans and AI agents for goal alignment. Build ✅ |
 | 2026-04-19 | **Multi-language README:** Added README translations in 7 languages (zh, ja, ko, de, fr, es, pt-BR) in `docs/`. Each file includes a full translations table. Build ✅ |
 | 2026-04-17 | **Beta 8 Enhancements:** Delivered AppTheme Appearance switch integration. Updated PromptManager to push shorter text generation arrays and drop perfectionism syntax natively. Deployed reservesSpace native geometry handling list typography. Build ✅ |
 | 2026-04-15 | **Beta 7 Open Source Prep:** Removed all subscription logic and UI. Relocated global data deletion to Sync settings. Created README.md and LICENSE (CC BY-NC-ND 4.0). Build ✅ |
-| 2026-03-23 | **Beta 6 Thinking Blocks:** Created `ThinkingBlockParser` + `AIResponseView` for collapsible `<think>` blocks in AI output. Added pulsing animation. Build ✅ |
-| 2026-03-20 | **Workflow Validation:** Analyzed CHECKPOINT.md, reviewed .agents/rules, optimized xcodebuild error logging. Build ✅ |
-| 2026-03-20 | **Beta 5 MCP Enhancements:** Audited all 12 MCP tools. Added Review MCP tools. Build ✅ |
 
