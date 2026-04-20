@@ -37,6 +37,8 @@ What makes it special:
 
 ## 🎯 Features
 
+https://github.com/user-attachments/assets/ca3156bf-2db0-4a9b-b959-a8c8d01f4cf1
+
 ### Core OKR Management
 
  <img src="docs/screenshots/SoloOKRs_screenshot_1.png" />
