@@ -68,6 +68,7 @@ struct TaskRowView: View {
     @Bindable var task: OKRTask
     @Binding var selectedTaskID: UUID?
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.modelContext) private var modelContext
     @AppStorage("editingTaskID") private var editingTaskID: String = ""
     
     private var canEdit: Bool {
@@ -135,6 +136,10 @@ struct TaskRowView: View {
             if canEdit {
                 Divider()
                 Button(role: .destructive) {
+                    if selectedTaskID == task.id {
+                        selectedTaskID = nil
+                    }
+                    modelContext.delete(task)
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
