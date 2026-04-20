@@ -17,6 +17,10 @@
 
 ---
 
+[English](README.md) | [简体中文](docs/README_zh.md) | [日本語](docs/README_ja.md) | [한국어](docs/README_ko.md) | [Deutsch](docs/README_de.md) | [Français](docs/README_fr.md) | [Español](docs/README_es.md) | [Português (BR)](docs/README_ptBR.md)
+
+---
+
 ## ✨ SoloOKRs とは？
 
 SoloOKRs は、**OKR（Objectives and Key Results）フレームワーク**を用いてパーソナルゴールを管理するための**ネイティブ macOS アプリケーション**です。チーム向けの OKR ツールとは異なり、SoloOKRs は OPC（One Person Company）創設者や個人向けに設計されており、集中できて気晴らしのない環境で個人の目標を設定・追跡・振り返ることができます。このプロジェクトは Google Antigravity との vibe-coding ワークフローで構築されました。
@@ -30,23 +34,6 @@ AI の時代において、SoloOKRs は**人間と AI Agent の間の架け橋**
 - 📊 **レビューモード** — 定期的な OKR 振り返りための構造化されたワークフロー
 - ☁️ **iCloud 同期** — Mac デバイス間でシームレスにデータを同期
 - 🌍 **9 か国語** — リアルタイムでの言語切替に対応した完全な多言語サポート
-
----
-
-## 🌐 翻訳
-
-この README は世界中の開発者を支援するため、複数の言語で利用可能です：
-
-| 言語           | リンク                                     |
-| -------------- | ------------------------------------------ |
-| 英語           | [README.md](README.md)                     |
-| 简体中文       | [docs/README_zh.md](docs/README_zh.md)     |
-| 日本語         | [docs/README_ja.md](docs/README_ja.md)     |
-| 한국어         | [docs/README_ko.md](docs/README_ko.md)     |
-| Deutsch        | [docs/README_de.md](docs/README_de.md)     |
-| Français       | [docs/README_fr.md](docs/README_fr.md)     |
-| Español        | [docs/README_es.md](docs/README_es.md)     |
-| Português (BR) | [docs/README_ptBR.md](docs/README_ptBR.md) |
 
 ---
 

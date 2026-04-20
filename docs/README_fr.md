@@ -17,6 +17,10 @@
 
 ---
 
+[English](README.md) | [简体中文](docs/README_zh.md) | [日本語](docs/README_ja.md) | [한국어](docs/README_ko.md) | [Deutsch](docs/README_de.md) | [Français](docs/README_fr.md) | [Español](docs/README_es.md) | [Português (BR)](docs/README_ptBR.md)
+
+---
+
 ## ✨ Qu'est-ce que SoloOKRs ?
 
 SoloOKRs est une **application macOS native** de gestion d'objectifs personnels utilisant le framework **OKR (Objectives and Key Results)**. Contrairement aux outils OKR orientés équipes, SoloOKRs est conçu pour les fondateurs d'OPC (One Person Company) et les individus qui souhaitent un environnement concentré et sans distraction pour définir, suivre et réfléchir à leurs objectifs personnels. Ce projet a été développé dans un workflow de vibe-coding avec Google Antigravity.
@@ -30,23 +34,6 @@ Ce qui la rend spéciale :
 - 📊 **Mode Révision** — Flux de travail rétrospectif intégré pour des révisions périodiques d'OKR
 - ☁️ **Synchronisation iCloud** — Synchronisation transparente des données entre vos appareils Mac
 - 🌍 **9 langues** — Support multilingue complet avec changement de langue en temps réel
-
----
-
-## 🌐 Traductions
-
-Ce README est disponible en plusieurs langues pour aider les développeurs du monde entier :
-
-| Langue         | Lien                                       |
-| -------------- | ------------------------------------------ |
-| Anglais        | [README.md](README.md)                     |
-| 简体中文       | [docs/README_zh.md](docs/README_zh.md)     |
-| 日本語         | [docs/README_ja.md](docs/README_ja.md)     |
-| 한국어         | [docs/README_ko.md](docs/README_ko.md)     |
-| Allemand       | [docs/README_de.md](docs/README_de.md)     |
-| Français       | [docs/README_fr.md](docs/README_fr.md)     |
-| Español        | [docs/README_es.md](docs/README_es.md)     |
-| Portugais (BR) | [docs/README_ptBR.md](docs/README_ptBR.md) |
 
 ---
 
