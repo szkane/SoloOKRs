@@ -47,7 +47,38 @@ struct AddTaskContent: View {
     @State private var hasDueDate = false
     
     var body: some View {
-        HSplitView {
+        Group {
+            #if os(macOS)
+            HSplitView {
+                formPane
+                notesPane
+            }
+            #else
+            HStack(spacing: 0) {
+                formPane
+                Divider()
+                notesPane
+            }
+            #endif
+        }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(LocalizedStringKey("Cancel")) {
+                    onComplete()
+                }
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                Button(LocalizedStringKey("Save")) {
+                    saveTask()
+                    onComplete()
+                }
+                .disabled(title.isEmpty)
+            }
+        }
+    }
+
+    private var formPane: some View {
             // LEFT: Basic Info Form
             Form {
                 Section(LocalizedStringKey("Title")) {
@@ -74,37 +105,24 @@ struct AddTaskContent: View {
             }
             .formStyle(.grouped)
             .frame(minWidth: 320, idealWidth: 360, maxWidth: 420)
+    }
+
+    private var notesPane: some View {
+        // RIGHT: Markdown Notes Editor
+        VStack(alignment: .leading, spacing: 0) {
+            Text(LocalizedStringKey("Notes"))
+                .font(.headline)
+                .padding()
             
-            // RIGHT: Markdown Notes Editor
-            VStack(alignment: .leading, spacing: 0) {
-                Text(LocalizedStringKey("Notes"))
-                    .font(.headline)
-                    .padding()
-                
-                MarkdownEditorView(
-                    text: $description,
-                    placeholder: String(localized: "Add notes (Markdown supported)...")
-                )
-                .frame(maxHeight: .infinity)
-                .padding(.horizontal)
-                .padding(.bottom)
-            }
-            .frame(minWidth: 500, idealWidth: 700)
+            MarkdownEditorView(
+                text: $description,
+                placeholder: String(localized: "Add notes (Markdown supported)...")
+            )
+            .frame(maxHeight: .infinity)
+            .padding(.horizontal)
+            .padding(.bottom)
         }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button(LocalizedStringKey("Cancel")) {
-                    onComplete()
-                }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button(LocalizedStringKey("Save")) {
-                    saveTask()
-                    onComplete()
-                }
-                .disabled(title.isEmpty)
-            }
-        }
+        .frame(minWidth: 500, idealWidth: 700)
     }
     
     private func saveTask() {

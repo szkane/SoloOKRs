@@ -15,7 +15,7 @@ struct PromptSettingsView: View {
     private let promptManager = PromptManager.shared
     
     var body: some View {
-        HSplitView {
+        adaptiveSplit {
             // Left: prompt list
             List(PromptTemplateID.allCases, selection: $selectedPrompt) { template in
                 HStack(spacing: 10) {
@@ -50,6 +50,7 @@ struct PromptSettingsView: View {
             }
             .frame(minWidth: 200, idealWidth: 240)
             .listStyle(.sidebar)
+        } right: {
             
             // Right: editor
             if let selected = selectedPrompt {
@@ -108,8 +109,9 @@ struct PromptSettingsView: View {
                     
                     // Editor/Preview area
                     if showPreview {
-                        HSplitView {
+                        adaptiveSplit {
                             promptEditor
+                        } right: {
                             promptPreview
                         }
                     } else {
@@ -150,6 +152,22 @@ struct PromptSettingsView: View {
             }
         }
         .navigationTitle("Prompts")
+    }
+
+    @ViewBuilder
+    private func adaptiveSplit<Left: View, Right: View>(@ViewBuilder left: () -> Left, @ViewBuilder right: () -> Right) -> some View {
+        #if os(macOS)
+        HSplitView {
+            left()
+            right()
+        }
+        #else
+        HStack(spacing: 0) {
+            left()
+            Divider()
+            right()
+        }
+        #endif
     }
     
     // MARK: - Subviews

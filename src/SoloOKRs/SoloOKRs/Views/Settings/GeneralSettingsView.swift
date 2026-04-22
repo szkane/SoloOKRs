@@ -25,7 +25,11 @@ struct GeneralSettingsView: View {
                     Text("Key Results").tag("keyresults")
                     Text("Tasks").tag("tasks")
                 }
+                #if os(macOS)
                 .pickerStyle(.radioGroup)
+                #else
+                .pickerStyle(.segmented)
+                #endif
             }
 
             Section("Language") {

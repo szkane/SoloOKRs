@@ -54,7 +54,9 @@ struct AddKeyResultView: View {
                             HStack(alignment: .center, spacing: 16) {
                                 Toggle("", isOn: $input.isSelected)
                                     .labelsHidden()
+                                    #if os(macOS)
                                     .toggleStyle(.checkbox)
+                                    #endif
                                     .controlSize(.regular)
                                 
                                 TextField(LocalizedStringKey("Enter Key Result..."), text: $input.text)

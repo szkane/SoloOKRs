@@ -47,11 +47,13 @@ struct KeyResultListView: View {
                         }
                         .buttonStyle(.plain)
                         .onHover { isHovered in
+                            #if os(macOS)
                             if isHovered {
                                 NSCursor.pointingHand.push()
                             } else {
                                 NSCursor.pop()
                             }
+                            #endif
                         }
                     } else {
                         Label("\(objective.reviews.count) Reviews", systemImage: "doc.text.magnifyingglass")
@@ -62,7 +64,7 @@ struct KeyResultListView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Color(nsColor: .windowBackgroundColor))
             
             Divider()
             
