@@ -8,8 +8,8 @@ import SwiftData
 
 @Model
 final class OKRTask {
-    var id: UUID
-    var title: String
+    var id: UUID = UUID()
+    var title: String = ""
     var taskDescription: String = ""
     
     var dueDate: Date?

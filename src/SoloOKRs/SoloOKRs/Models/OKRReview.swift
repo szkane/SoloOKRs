@@ -8,10 +8,10 @@ import SwiftData
 
 @Model
 final class OKRReview {
-    @Attribute(.unique) var id: UUID
-    var reviewType: ReviewType
-    var overallNotes: String
-    var createdAt: Date
+    var id: UUID = UUID()
+    var reviewType: ReviewType = ReviewType.weekly
+    var overallNotes: String = ""
+    var createdAt: Date = Date()
     
     var objective: Objective?
     

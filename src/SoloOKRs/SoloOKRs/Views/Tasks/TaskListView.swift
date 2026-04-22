@@ -45,11 +45,19 @@ struct TaskListView: View {
                 .disabled(!ReviewModeManager.shared.canEditTask(for: keyResult))
             }
         }
+        #if os(macOS)
         .sheet(isPresented: $showingAddTaskSheet) {
             NavigationStack {
                 AddTaskWindowView()
             }
         }
+        #else
+        .fullScreenCover(isPresented: $showingAddTaskSheet) {
+            NavigationStack {
+                AddTaskWindowView()
+            }
+        }
+        #endif
     }
 
     private func presentAddTask() {
@@ -181,11 +189,19 @@ struct TaskRowView: View {
                 }
             }
         }
+        #if os(macOS)
         .sheet(isPresented: $showingEditTaskSheet) {
             NavigationStack {
                 EditTaskWindowView()
             }
         }
+        #else
+        .fullScreenCover(isPresented: $showingEditTaskSheet) {
+            NavigationStack {
+                EditTaskWindowView()
+            }
+        }
+        #endif
     }
 
     private func presentEditTask() {

@@ -30,7 +30,11 @@ struct EditTaskWindowView: View {
                 ContentUnavailableView(LocalizedStringKey("No Task Selected"), systemImage: "doc.questionmark")
             }
         }
+        #if os(macOS)
         .frame(minWidth: 900, minHeight: 600)
+        #else
+        .frame(minWidth: 320, minHeight: 500)
+        #endif
     }
 }
 
@@ -39,19 +43,29 @@ struct EditTaskContent: View {
     var onDone: () -> Void
     
     var body: some View {
-        Group {
-            #if os(macOS)
-            HSplitView {
-                formPane
-                notesPane
+        GeometryReader { geometry in
+            Group {
+                #if os(macOS)
+                HSplitView {
+                    formPane(isCompact: false)
+                    notesPane(isCompact: false)
+                }
+                #else
+                if geometry.size.width >= 820 {
+                    HStack(spacing: 0) {
+                        formPane(isCompact: false)
+                        Divider()
+                        notesPane(isCompact: false)
+                    }
+                } else {
+                    VStack(spacing: 0) {
+                        formPane(isCompact: true)
+                        Divider()
+                        notesPane(isCompact: true)
+                    }
+                }
+                #endif
             }
-            #else
-            HStack(spacing: 0) {
-                formPane
-                Divider()
-                notesPane
-            }
-            #endif
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -68,7 +82,7 @@ struct EditTaskContent: View {
         }
     }
 
-    private var formPane: some View {
+    private func formPane(isCompact: Bool) -> some View {
         // LEFT: Basic Info Form
         Form {
             if !task.isEditable {
@@ -114,10 +128,10 @@ struct EditTaskContent: View {
             .disabled(!task.isEditable)
         }
         .formStyle(.grouped)
-        .frame(minWidth: 270, idealWidth: 300, maxWidth: 350)
+        .frame(maxWidth: isCompact ? .infinity : 350)
     }
 
-    private var notesPane: some View {
+    private func notesPane(isCompact: Bool) -> some View {
         // RIGHT: Markdown Notes Editor
         VStack(alignment: .leading, spacing: 0) {
             Text(LocalizedStringKey("Notes"))
@@ -146,6 +160,6 @@ struct EditTaskContent: View {
                 .padding()
             }
         }
-        .frame(minWidth: 500, idealWidth: 700)
+        .frame(maxWidth: .infinity, minHeight: isCompact ? 260 : nil)
     }
 }

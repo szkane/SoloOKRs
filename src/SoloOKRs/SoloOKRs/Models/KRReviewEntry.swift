@@ -8,18 +8,18 @@ import SwiftData
 
 @Model
 final class KRReviewEntry {
-    @Attribute(.unique) var id: UUID
-    var currentValue: Double
-    var targetValue: Double
-    var completionPercent: Double
-    var trend: ReviewTrend
-    var status: KRReviewStatus
-    var statusReason: String
-    var progress: String
-    var blockers: String
-    var nextSteps: String
-    var adjustmentNotes: String
-    var createdAt: Date
+    var id: UUID = UUID()
+    var currentValue: Double = 0
+    var targetValue: Double = 100
+    var completionPercent: Double = 0
+    var trend: ReviewTrend = ReviewTrend.flat
+    var status: KRReviewStatus = KRReviewStatus.onTrack
+    var statusReason: String = ""
+    var progress: String = ""
+    var blockers: String = ""
+    var nextSteps: String = ""
+    var adjustmentNotes: String = ""
+    var createdAt: Date = Date()
     
     var keyResult: KeyResult?
     var review: OKRReview?

@@ -8,12 +8,12 @@ import SwiftData
 
 @Model
 final class KeyResult {
-    @Attribute(.unique) var id: UUID
-    var title: String
+    var id: UUID = UUID()
+    var title: String = ""
     var selfScore: Int?  // 0–100, set during Review Mode
-    var order: Int
-    var createdAt: Date
-    var updatedAt: Date
+    var order: Int = 0
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
     
     var objective: Objective?
     

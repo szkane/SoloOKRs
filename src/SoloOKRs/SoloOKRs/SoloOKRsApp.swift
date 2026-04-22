@@ -27,16 +27,42 @@ struct SoloOKRsApp: App {
             OKRReview.self,
             KRReviewEntry.self
         ])
+
+        #if targetEnvironment(simulator)
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = .none
+        #else
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = .automatic
+        #endif
+
         let modelConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic  // Enables CloudKit sync
+            cloudKitDatabase: cloudKitDatabase
         )
         
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            let primaryError = error as NSError
+
+            // If primary store fails to load, recover with a local, non-CloudKit fallback store.
+            let fallbackURL = FileManager.default
+                .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("SoloOKRs-fallback.store")
+            let fallbackConfiguration = ModelConfiguration(
+                schema: schema,
+                url: fallbackURL,
+                cloudKitDatabase: .none
+            )
+
+            do {
+                return try ModelContainer(for: schema, configurations: [fallbackConfiguration])
+            } catch {
+                let fallbackError = error as NSError
+                fatalError(
+                    "Could not create ModelContainer: primary=\(primaryError) | primaryDomain=\(primaryError.domain) primaryCode=\(primaryError.code) primaryUserInfo=\(primaryError.userInfo) | fallback=\(fallbackError) | fallbackDomain=\(fallbackError.domain) fallbackCode=\(fallbackError.code) fallbackUserInfo=\(fallbackError.userInfo)"
+                )
+            }
         }
     }()
     

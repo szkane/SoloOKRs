@@ -8,17 +8,17 @@ import SwiftData
 
 @Model
 final class Objective {
-    @Attribute(.unique) var id: UUID
-    var title: String
-    var objectiveDescription: String
-    var startDate: Date
-    var endDate: Date
-    var status: OKRStatus
+    var id: UUID = UUID()
+    var title: String = ""
+    var objectiveDescription: String = ""
+    var startDate: Date = Date()
+    var endDate: Date = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
+    var status: OKRStatus = OKRStatus.draft
     var lastReviewedAt: Date?
     var archivedAt: Date?
-    var order: Int
-    var createdAt: Date
-    var updatedAt: Date
+    var order: Int = 0
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
     
     @Relationship(deleteRule: .cascade, inverse: \KeyResult.objective)
     var keyResults: [KeyResult] = []

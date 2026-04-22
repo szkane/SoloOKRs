@@ -26,6 +26,7 @@ struct ObjectiveListView: View {
     @State private var showingReviewSheet: Objective?
     @State private var showingReviewHistory: Objective?
     @State private var editingObjective: Objective?
+    @State private var showingSettingsSheet = false
     @AppStorage("preferredLanguage") private var preferredLanguage = ""
     @AppStorage("selectedSettingsTab") private var selectedTabSettings: String = "general"
     #if os(macOS)
@@ -223,6 +224,35 @@ struct ObjectiveListView: View {
             EditObjectiveView(objective: obj)
                 .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
         }
+        #if os(macOS)
+        .sheet(isPresented: $showingSettingsSheet) {
+            NavigationStack {
+                SettingsView()
+                    .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") {
+                                showingSettingsSheet = false
+                            }
+                        }
+                    }
+            }
+        }
+        #else
+        .fullScreenCover(isPresented: $showingSettingsSheet) {
+            NavigationStack {
+                SettingsView()
+                    .environment(\.locale, preferredLanguage.isEmpty ? .current : Locale(identifier: preferredLanguage))
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") {
+                                showingSettingsSheet = false
+                            }
+                        }
+                    }
+            }
+        }
+        #endif
     }
 
     @ViewBuilder
@@ -374,6 +404,8 @@ struct ObjectiveListView: View {
         selectedTabSettings = tab
         #if os(macOS)
         openSettings()
+        #else
+        showingSettingsSheet = true
         #endif
     }
     
