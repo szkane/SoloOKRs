@@ -1,12 +1,12 @@
-> **Last Session:** 2026-04-20 10:49
-> **Current Phase:** Bugfixing & Release Prep
-> **Build Status:** ✅ (verified 2026-04-20 10:49)
+> **Last Session:** 2026-04-22 17:06
+> **Current Phase:** Beta 9 iPad Support + iCloud Sync
+> **Build Status:** ✅ (verified 2026-04-22 17:06)
 
 ---
 
 ## 📍 Current Focus
 
-**Beta 8 Enhancements** — UI layout improvements, dynamic Appearance settings, and optimized AI Prompts for practical OKR management.
+**Beta 9** — iPad support enablement with no macOS UX redesign, plus iCloud/CloudKit sync capability wiring.
 
 ---
 
@@ -39,22 +39,23 @@
 
 ## 🔗 Quick Links
 
-| Resource         | Path                                              |
-| ---------------- | ------------------------------------------------- |
-| **Beta 8 Plan**  | `docs/plans/2026-04-17-beta8.md`                  |
-| **Beta 7 Plan**  | `docs/plans/2026-04-15-beta7-subscription-removal.md` |
-| **Beta 6 Plan**  | `docs/plans/2026-03-23-beta6-thinking-blocks.md`  |
-| **Beta 3 Plan**  | `docs/plans/2026-03-17-ui-polish.md`              |
+| Resource        | Path                                                      |
+| --------------- | --------------------------------------------------------- |
+| **Beta 9 Plan** | `docs/plans/2026-04-22-beta9-ipad-support-icloud-sync.md` |
+| **Beta 8 Plan** | `docs/plans/2026-04-17-beta8.md`                          |
+| **Beta 7 Plan** | `docs/plans/2026-04-15-beta7-subscription-removal.md`     |
+| **Beta 6 Plan** | `docs/plans/2026-03-23-beta6-thinking-blocks.md`          |
+| **Beta 3 Plan** | `docs/plans/2026-03-17-ui-polish.md`                      |
 
 ---
 
 ## 📝 Recent Session Notes
 
-| Date       | Summary                                                                                                                                                                                                                                                                                                                                                               |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-20 | **Task Deletion Fix:** Fixed an empty closure issue where tasks were not actually being deleted when selecting 'Delete' in the task context menu. Injected modelContext and properly cleared selection states. Build ✅ |
-| 2026-04-19 | **AI-Human Alignment README:** Added OPC (One Person Company) focus and AI-human alignment description across all 8 README versions. SoloOKRs positioned as a bridge between humans and AI agents for goal alignment. Build ✅ |
-| 2026-04-19 | **Multi-language README:** Added README translations in 7 languages (zh, ja, ko, de, fr, es, pt-BR) in `docs/`. Each file includes a full translations table. Build ✅ |
-| 2026-04-17 | **Beta 8 Enhancements:** Delivered AppTheme Appearance switch integration. Updated PromptManager to push shorter text generation arrays and drop perfectionism syntax natively. Deployed reservesSpace native geometry handling list typography. Build ✅ |
-| 2026-04-15 | **Beta 7 Open Source Prep:** Removed all subscription logic and UI. Relocated global data deletion to Sync settings. Created README.md and LICENSE (CC BY-NC-ND 4.0). Build ✅ |
-
+| Date       | Summary                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-22 | **Beta 9 iPad + iCloud Sync:** Enabled app target iOS/iPad platforms, added iCloud/CloudKit entitlements (iOS SDK scoped), and refactored macOS-only APIs (`HSplitView`/`VSplitView`, `NSPasteboard`, `radioGroup`, `checkbox`, `openWindow/openSettings`, `NSColor/NSCursor`) with platform-safe fallbacks. Verified macOS + Mac Catalyst builds ✅ (local iOS 26.4 runtime missing). |
+| 2026-04-20 | **Task Deletion Fix:** Fixed an empty closure issue where tasks were not actually being deleted when selecting 'Delete' in the task context menu. Injected modelContext and properly cleared selection states. Build ✅                                                                                                                                                                |
+| 2026-04-19 | **AI-Human Alignment README:** Added OPC (One Person Company) focus and AI-human alignment description across all 8 README versions. SoloOKRs positioned as a bridge between humans and AI agents for goal alignment. Build ✅                                                                                                                                                         |
+| 2026-04-19 | **Multi-language README:** Added README translations in 7 languages (zh, ja, ko, de, fr, es, pt-BR) in `docs/`. Each file includes a full translations table. Build ✅                                                                                                                                                                                                                 |
+| 2026-04-17 | **Beta 8 Enhancements:** Delivered AppTheme Appearance switch integration. Updated PromptManager to push shorter text generation arrays and drop perfectionism syntax natively. Deployed reservesSpace native geometry handling list typography. Build ✅                                                                                                                              |
+| 2026-04-15 | **Beta 7 Open Source Prep:** Removed all subscription logic and UI. Relocated global data deletion to Sync settings. Created README.md and LICENSE (CC BY-NC-ND 4.0). Build ✅                                                                                                                                                                                                         |

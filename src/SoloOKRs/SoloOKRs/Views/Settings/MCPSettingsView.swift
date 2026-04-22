@@ -2,6 +2,9 @@
 // SoloOKRs
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct MCPSettingsView: View {
     @Bindable var mcpServer = MCPServer.shared
@@ -152,8 +155,7 @@ struct MCPSettingsView: View {
                     .textSelection(.enabled)
                 Spacer()
                 Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(value, forType: .string)
+                    copyToClipboard(value)
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .font(.caption)
@@ -165,6 +167,15 @@ struct MCPSettingsView: View {
             .background(.quaternary.opacity(0.5))
             .cornerRadius(6)
         }
+    }
+
+    private func copyToClipboard(_ value: String) {
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+        #elseif canImport(UIKit)
+        UIPasteboard.general.string = value
+        #endif
     }
 
     private func configSnippet(_ text: String, caption: String) -> some View {

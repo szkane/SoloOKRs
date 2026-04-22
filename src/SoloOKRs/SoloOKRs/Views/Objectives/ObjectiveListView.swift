@@ -28,7 +28,9 @@ struct ObjectiveListView: View {
     @State private var editingObjective: Objective?
     @AppStorage("preferredLanguage") private var preferredLanguage = ""
     @AppStorage("selectedSettingsTab") private var selectedTabSettings: String = "general"
+    #if os(macOS)
     @Environment(\.openSettings) private var openSettings
+    #endif
     
     enum ObjectiveTab: String, CaseIterable {
         case draft = "Draft"
@@ -102,8 +104,7 @@ struct ObjectiveListView: View {
             
             HStack(spacing: 20) {
                 Button {
-                    selectedTabSettings = "ai"
-                    openSettings()
+                    openSettingsTab("ai")
                 } label: {
                     Image(systemName: "brain")
                         .foregroundStyle(AIService.shared.isConfigured ? .green : .secondary)
@@ -112,8 +113,7 @@ struct ObjectiveListView: View {
                 .help("AI Settings")
 
                 Button {
-                    selectedTabSettings = "mcp"
-                    openSettings()
+                    openSettingsTab("mcp")
                 } label: {
                     Image(systemName: "network")
                         .foregroundStyle(MCPServer.shared.isRunning ? .green : .secondary)
@@ -122,8 +122,7 @@ struct ObjectiveListView: View {
                 .help("MCP Settings")
 
                 Button {
-                    selectedTabSettings = "sync"
-                    openSettings()
+                    openSettingsTab("sync")
                 } label: {
                     Image(systemName: "icloud.fill")
                         .foregroundStyle(.green)
@@ -136,7 +135,7 @@ struct ObjectiveListView: View {
             .font(.system(size: 14))
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Color(nsColor: .windowBackgroundColor))
         }
         .navigationTitle("Objectives")
 
@@ -369,6 +368,13 @@ struct ObjectiveListView: View {
                 selectedObjective = nil
             }
         }
+    }
+
+    private func openSettingsTab(_ tab: String) {
+        selectedTabSettings = tab
+        #if os(macOS)
+        openSettings()
+        #endif
     }
     
     private func unarchiveObjective(_ objective: Objective) {

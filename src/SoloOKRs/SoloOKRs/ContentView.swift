@@ -13,8 +13,7 @@ struct ContentView: View {
     @State private var selectedObjective: Objective?
     @State private var selectedKeyResult: KeyResult?
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
-    
-    @Environment(\.openSettings) private var openSettings
+
     @AppStorage("selectedSettingsTab") private var selectedTab: String = "general"
     
     var body: some View {

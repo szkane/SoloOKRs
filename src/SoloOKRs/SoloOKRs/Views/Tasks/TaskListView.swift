@@ -9,51 +9,35 @@ import MarkdownUI
 
 struct TaskListView: View {
     @Environment(\.modelContext) private var modelContext
+    #if os(macOS)
     @Environment(\.openWindow) private var openWindow
+    #endif
     @AppStorage("addingTaskKeyResultID") private var addingKeyResultID: String = ""
     @State private var selectedTaskID: UUID?
+    @State private var showingAddTaskSheet = false
     let keyResult: KeyResult
     
     var body: some View {
-        VSplitView {
-            List(selection: $selectedTaskID) {
-                ForEach(keyResult.tasks.sorted(by: { $0.createdAt < $1.createdAt })) { task in
-                    TaskRowView(task: task, selectedTaskID: $selectedTaskID)
-                        .tag(task.id)
-                }
+        Group {
+            #if os(macOS)
+            VSplitView {
+                taskListPane
+                taskDetailPane
             }
-            .frame(minHeight: 150)
-            
-            VStack {
-                if let selectedID = selectedTaskID, let task = keyResult.tasks.first(where: { $0.id == selectedID }) {
-                    if task.taskDescription.isEmpty {
-                        Text("This task has no details.")
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        ScrollView {
-                            Markdown(task.taskDescription)
-                                .textSelection(.enabled)
-                                .markdownTheme(.gitHub)
-                                .markdownCodeSyntaxHighlighter(.splash)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding()
-                        }
-                    }
-                } else {
-                    Text("No task selected")
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
+            #else
+            VStack(spacing: 0) {
+                taskListPane
+                Divider()
+                taskDetailPane
             }
-            .frame(minHeight: 100)
+            #endif
         }
         .navigationTitle(keyResult.title)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button {
                     addingKeyResultID = keyResult.id.uuidString
-                    openWindow(id: "addTask")
+                    presentAddTask()
                 } label: {
                     Image(systemName: "checkmark.circle.badge.plus")
                         .help("Add Task")
@@ -61,15 +45,67 @@ struct TaskListView: View {
                 .disabled(!ReviewModeManager.shared.canEditTask(for: keyResult))
             }
         }
+        .sheet(isPresented: $showingAddTaskSheet) {
+            NavigationStack {
+                AddTaskWindowView()
+            }
+        }
+    }
+
+    private func presentAddTask() {
+        #if os(macOS)
+        openWindow(id: "addTask")
+        #else
+        showingAddTaskSheet = true
+        #endif
+    }
+
+    private var taskListPane: some View {
+        List(selection: $selectedTaskID) {
+            ForEach(keyResult.tasks.sorted(by: { $0.createdAt < $1.createdAt })) { task in
+                TaskRowView(task: task, selectedTaskID: $selectedTaskID)
+                    .tag(task.id)
+            }
+        }
+        .frame(minHeight: 150)
+    }
+
+    private var taskDetailPane: some View {
+        VStack {
+            if let selectedID = selectedTaskID, let task = keyResult.tasks.first(where: { $0.id == selectedID }) {
+                if task.taskDescription.isEmpty {
+                    Text("This task has no details.")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        Markdown(task.taskDescription)
+                            .textSelection(.enabled)
+                            .markdownTheme(.gitHub)
+                            .markdownCodeSyntaxHighlighter(.splash)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                    }
+                }
+            } else {
+                Text("No task selected")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .frame(minHeight: 100)
     }
 }
 
 struct TaskRowView: View {
     @Bindable var task: OKRTask
     @Binding var selectedTaskID: UUID?
+    #if os(macOS)
     @Environment(\.openWindow) private var openWindow
+    #endif
     @Environment(\.modelContext) private var modelContext
     @AppStorage("editingTaskID") private var editingTaskID: String = ""
+    @State private var showingEditTaskSheet = false
     
     private var canEdit: Bool {
         task.isEditable
@@ -120,7 +156,7 @@ struct TaskRowView: View {
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
             editingTaskID = task.id.uuidString
-            openWindow(id: "editTask")
+            presentEditTask()
         }
         .simultaneousGesture(TapGesture().onEnded {
             selectedTaskID = task.id
@@ -128,7 +164,7 @@ struct TaskRowView: View {
         .contextMenu {
             Button {
                 editingTaskID = task.id.uuidString
-                openWindow(id: "editTask")
+                presentEditTask()
             } label: {
                 Label("Edit", systemImage: "pencil")
             }
@@ -145,6 +181,19 @@ struct TaskRowView: View {
                 }
             }
         }
+        .sheet(isPresented: $showingEditTaskSheet) {
+            NavigationStack {
+                EditTaskWindowView()
+            }
+        }
+    }
+
+    private func presentEditTask() {
+        #if os(macOS)
+        openWindow(id: "editTask")
+        #else
+        showingEditTaskSheet = true
+        #endif
     }
 }
 

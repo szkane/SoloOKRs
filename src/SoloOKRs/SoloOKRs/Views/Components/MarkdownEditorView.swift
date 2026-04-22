@@ -42,10 +42,18 @@ struct MarkdownEditorView: View {
             
             // Editor / Preview
             if showPreview {
+                #if os(macOS)
                 HSplitView {
                     editorPane
                     previewPane
                 }
+                #else
+                HStack(spacing: 0) {
+                    editorPane
+                    Divider()
+                    previewPane
+                }
+                #endif
             } else {
                 editorPane
             }
